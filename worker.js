@@ -13,6 +13,20 @@
 
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
 const NOTION_VERSION = "2025-09-03";
+const CACHE_VERSION = "2026-08-21-impact-fallback";
+
+// Verified from the authoritative Notion Events rows on 2026-08-21. These values
+// are used only while the map integration cannot see the related Trips/Events
+// databases; computed Country Data values automatically take precedence.
+const IMPACT_FALLBACK = {
+  GTM: { filters: 425, served: 2125 },
+  COL: { filters: 143, served: 715 },
+  THA: { filters: 11,  served: 55 },
+  MMR: { filters: 132, served: 660 },
+  VNM: { filters: 184, served: 920 },
+  SLV: { filters: 72,  served: 360 },
+  NIC: { filters: 3,   served: 15 },
+};
 
 // Notion property names (exact). Change only if you rename columns in Notion.
 const PROP = {
@@ -48,7 +62,7 @@ export default {
 
       // Notion rollups/formulas are expensive to compute. Cache the finished payload at the edge for 5 minutes.
       const cache = request.method === "GET" && typeof caches !== "undefined" ? caches.default : null;
-      const cacheKey = cache ? new Request(new URL(request.url).origin + "/__wata-map-data") : null;
+      const cacheKey = cache ? new Request(new URL(request.url).origin + `/__wata-map-data-${CACHE_VERSION}`) : null;
       const cached = cache && await cache.match(cacheKey);
       if (cached) return cached;
 
@@ -98,6 +112,13 @@ export default {
         }
       }
       await Promise.all(numberLookups);
+
+      for (const [iso, country] of Object.entries(countries)) {
+        const fallback = IMPACT_FALLBACK[iso];
+        if (!fallback || country.filters != null) continue;
+        country.filters = fallback.filters;
+        if (country.served == null || country.served === 0) country.served = fallback.served;
+      }
 
       const payload = {
         updated: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
