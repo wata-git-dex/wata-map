@@ -81,9 +81,11 @@ export default {
         // Fetch the individual properties only for countries related to Trips. If the Trips
         // relation is unavailable, impact stages are the conservative fallback.
         const trips = prop(p, PROP.trips)?.relation;
-        const hasTrips = Array.isArray(trips)
-          ? trips.length > 0
-          : ["Active", "Pilot", "Done"].includes(stage);
+        // A relation can be returned as an empty array when the related database is not
+        // shared with the integration, even though the country's rollups are populated.
+        // Impact-stage rows must therefore still resolve their computed properties.
+        const hasTrips = (Array.isArray(trips) && trips.length > 0)
+          || ["Active", "Pilot", "Done"].includes(stage);
         if (hasTrips && (country.filters == null || country.served == null)) {
           numberLookups.push((async () => {
             const [filters, served] = await Promise.all([
