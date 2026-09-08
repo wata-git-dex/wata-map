@@ -1,25 +1,26 @@
-// WATA Map Worker — reads the existing "Country Data" Notion DB, returns JSON for the map.
+// WATA Map Worker — reads Notion Country Data + Events, returns JSON for the map.
 // Token lives ONLY as a Cloudflare secret (NOTION_TOKEN). Never in the app or repo.
 //
 // SETUP (Cloudflare → Workers & Pages → Create Worker → paste → Deploy):
 //   1. Settings → Variables and Secrets → add NOTION_TOKEN (encrypted).
-//   2. In Notion: open "Country Data" → ••• → Connections → add your integration.
+//   2. In Notion: connect the integration to both "Country Data" and "Deployments (1)" (Events).
 //   3. Visit the Worker URL in a browser — you should see JSON.
 //   4. Paste the Worker URL into WORKER_URL at the top of the map's index.html.
 //
-// Reads from the "Country Data" data source. Everything the map shows already lives here:
-//   Name, Stage (status), Total Filters (rollup), Total People (formula), Map Narrative, Map Photos, Regions.
-// No new database, no Airtable read — the map's single source is this one DB.
+// Country Data supplies country metadata. Completed Events supply impact totals directly by Country.
+// A Trip or formal Deployment is optional context and is never required for an Event to count.
+// No new database and no Airtable read.
 
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
+const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployments (1) / Events
 const NOTION_VERSION = "2025-09-03";
-const CACHE_VERSION = "2026-08-21-impact-fallback";
+const CACHE_VERSION = "2026-09-08-country-event-totals";
+const PEOPLE_PER_FILTER = 5;
 
-// Verified from the authoritative Notion Events rows on 2026-08-21. These values
-// are used only while the map integration cannot see the related Trips/Events
-// databases; computed Country Data values automatically take precedence.
+// Verified from the authoritative Notion Events rows. These values are used only
+// while the map integration cannot read Events. Event totals automatically win.
 const IMPACT_FALLBACK = {
-  GTM: { filters: 425, served: 2125 },
+  GTM: { filters: 465, served: 2325 },
   COL: { filters: 143, served: 715 },
   THA: { filters: 11,  served: 55 },
   MMR: { filters: 132, served: 660 },
@@ -39,6 +40,14 @@ const PROP = {
   iso:     "ISO3",         // OPTIONAL text column. If present it wins over the name lookup.
   photos:  "Map Photos",   // OPTIONAL text column of comma/newline-separated image URLs.
   regions: "Regions",      // multi-select column; each selected option becomes a pill.
+};
+
+const EVENT_PROP = {
+  country:     "Country",
+  status:      "Status",
+  total:       "Total Filters",
+  distributed: "Distributed Filters",
+  droppedOff:  "Dropped-Off",
 };
 
 // The map uses your Notion "Stage" names directly (Active, Pilot, Lead, Not started, Done, Paused),
@@ -69,6 +78,7 @@ export default {
       const pages = await queryAll(DATA_SOURCE_ID, env.NOTION_TOKEN);
 
       const countries = {};
+      const countryPageToIso = new Map();
       const numberLookups = [];
       for (const p of pages) {
         const name = text(p, PROP.name);
@@ -78,6 +88,8 @@ export default {
         let iso = text(p, PROP.iso).toUpperCase().trim();
         if (!iso) iso = NAME2ISO[name] || NAME2ISO[name.trim()] || "";
         if (!iso) continue; // country name we can't place on the map — skip quietly
+
+        countryPageToIso.set(normalizeNotionId(p.id), iso);
 
         const stage = status(p, PROP.stage);
         if (!stage) continue; // blank Stage — don't paint
@@ -113,6 +125,15 @@ export default {
       }
       await Promise.all(numberLookups);
 
+      // Events are the impact ledger. Count completed distribution/drop-off Events
+      // by their direct Country relation; Trip and Deployment relations are optional.
+      try {
+        const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN);
+        applyEventTotals(countries, countryPageToIso, events);
+      } catch (eventError) {
+        console.warn("Event totals unavailable; using Country Data values/fallbacks", eventError?.message || eventError);
+      }
+
       for (const [iso, country] of Object.entries(countries)) {
         const fallback = IMPACT_FALLBACK[iso];
         if (!fallback || country.filters != null) continue;
@@ -141,6 +162,41 @@ export default {
     }
   },
 };
+
+function applyEventTotals(countries, countryPageToIso, events) {
+  const totals = new Map();
+
+  for (const event of events) {
+    if (!["Distributed", "Dropped Off"].includes(status(event, EVENT_PROP.status))) continue;
+
+    let filters = anyNumber(event, EVENT_PROP.total);
+    if (filters == null) {
+      const distributed = anyNumber(event, EVENT_PROP.distributed);
+      const droppedOff = anyNumber(event, EVENT_PROP.droppedOff);
+      if (distributed == null && droppedOff == null) continue;
+      filters = (distributed || 0) + (droppedOff || 0);
+    }
+
+    const countryRelations = prop(event, EVENT_PROP.country)?.relation;
+    if (!Array.isArray(countryRelations)) continue;
+
+    for (const relation of countryRelations) {
+      const iso = countryPageToIso.get(normalizeNotionId(relation?.id));
+      if (!iso || !countries[iso]) continue;
+      totals.set(iso, (totals.get(iso) || 0) + filters);
+    }
+  }
+
+  for (const [iso, filters] of totals) {
+    countries[iso].filters = filters;
+    // The public map's established impact convention is five people per filter.
+    countries[iso].served = filters * PEOPLE_PER_FILTER;
+  }
+}
+
+function normalizeNotionId(id) {
+  return String(id || "").replace(/-/g, "").toLowerCase();
+}
 
 // 2025-09-03: query the data source. (Falls back to the legacy databases endpoint if needed.)
 async function queryAll(dsId, token) {
