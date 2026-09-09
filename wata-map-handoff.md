@@ -6,11 +6,11 @@
 An interactive world map that colors countries by their WATA project **Stage** and shows live filter/people impact numbers, pulled from Notion. Country metadata comes from Country Data; impact totals come directly from completed Events grouped by Country. Self-contained, no framework, no build step, $0/month. Replaced a paid Atlas.io map.
 
 ## Live locations
-- **Map (frontend):** `https://wata-git-dex.github.io/wata-map/` — repo `wata-git-dex/wata-map` (public), single file `index.html`. GitHub Pages auto-deploys on every commit to `main` (the built-in "pages build and deployment" Action — there is no custom workflow and none is needed).
-- **Worker (data API):** `https://wata-map.cleanwataorg.workers.dev` — Cloudflare Worker named `wata-map`. Source is `worker.js` in the repo (reference copy; the deployed copy lives in Cloudflare and is edited via Cloudflare → Edit code → Deploy).
+- **Map (frontend):** `https://map.cleanwata.org/` — custom domain for repo `wata-git-dex/wata-map` (public), with the GitHub URL redirecting to it. `.github/workflows/deploy-pages.yml` explicitly deploys the static site on relevant pushes to `main`.
+- **Worker (data API):** `https://wata-map.cleanwataorg.workers.dev` — Cloudflare Worker named `wata-map`. Source is `worker.js`; `.github/workflows/deploy-worker.yml` deploys it on relevant pushes to `main`.
 - **Data sources:** Notion **Country Data** (`638d93f9-19bc-8305-a503-07a0b9eaba93`) plus **Deployments (1) / Events** (`c94d93f9-19bc-83b4-8112-87a824660fb4`), under DATA & DOCS.
 - **Notion access:** the Notion integration named **WATA MAP** must be connected to both data sources. Its token is stored as the Cloudflare secret `NOTION_TOKEN` (encrypted). The token is NOT in the repo or in index.html, and must never be.
-- **Wix:** embed via **Embed a Site** (iframe) pointing at the Pages URL. [Update this line once embedded.]
+- **Wix:** embed via **Embed a Site** (iframe) pointing at `https://map.cleanwata.org/`.
 
 ## Data flow
 ```
@@ -70,14 +70,15 @@ All in `index.html` unless noted:
 - Fill Map Narrative + Map Photos for each country.
 - Optional: Airtable→Notion Event sync so surveyed filter numbers self-update without making mWater, a Trip, or a formal Deployment mandatory for historical/manual Events.
 
-## Appearance toggle — source only (2026-09-09)
+## Appearance toggle — live (2026-09-09)
 - The standalone map has one 44 px rounded-square sun/moon control beside its KPIs. It switches the complete map surface between purpose-designed dark and light palettes; there is no menu or language control.
 - The current theme is stored under the suite-compatible local key `wata-theme`. The browser theme color, accessible action label and icon update with the selection.
 - Light mode has separate ocean, land, border, text, panel, control and hover-contrast values so map geometry and impact colors remain distinct.
-- This frontend-only change does not alter the Worker or impact-data contract and is not live until the branch is pushed or merged to the Pages production branch.
+- Version `1.1.0` is live from frontend release revision `95b57162f3a125ff9399273429f6b0eac506b99e`. The release was verified directly at the custom domain in both themes and inside an iframe. The pre-release rollback baseline is `336b312e735c56e378d4831ec48b75063fb6c775`.
 
 ## Files
 - `index.html` — the map (live copy on Pages).
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
 - `theme.test.mjs` — theme-control, persistence and inline-script tests.
+- `.github/workflows/deploy-pages.yml` — explicit GitHub Pages release workflow.
 - this doc.
