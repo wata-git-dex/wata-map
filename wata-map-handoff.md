@@ -44,6 +44,7 @@ The map fetches the Worker on load and on the Refresh button. There is NO 6-hour
 - `filters`/`served` = number or null (null → shows "—").
 - keys = UPPERCASE ISO-3 matching the `id` on each `<path>` in the SVG.
 - Filters are summed from completed (`Distributed` or `Dropped Off`) Events using `Distributed Filters + Dropped-Off`, grouped by the Event's direct Country relation. Trips and formal Deployments are optional. People reached follows the established five-people-per-filter map convention. Results are cached 5 min.
+- Colombia has an owner-confirmed reported minimum of 150 dropped-off filters because the currently linked Notion Event rows total only 143. The public aggregate floor fills that known historical gap without fabricating operational filter, Family, or Event records; future Event totals above 150 win automatically. This correction is live from Worker revision `5946c99d8d696a1af1d069531e7fa671b714e714`.
 
 ## How to make common changes (edit points)
 All in `index.html` unless noted:
