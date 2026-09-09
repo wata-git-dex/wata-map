@@ -82,6 +82,7 @@ All in `index.html` unless noted:
 - Approved parent origins are exactly `https://grants.cleanwata.org` and `https://command.cleanwata.org`, with no paths or wildcards.
 - After iframe load, the parent sends `{type: "wata:quick-map-init"}` to target origin `https://map.cleanwata.org`. The child requires both `event.source === window.parent` and an approved exact `event.origin`, then replies `{type: "wata:quick-map-ready"}` to that exact origin.
 - After a successful handshake, Escape inside the iframe sends `{type: "wata:quick-map-close"}` to the stored exact parent origin. Messages contain no private data. The parent must independently require `event.origin === "https://map.cleanwata.org"` and `event.source === iframe.contentWindow` before closing its modal.
+- Map release `fc85e4b3ca1d940038af5534f4e81456af92a09b` is live. Independent production acceptance against Grant Hub v0.3.0 (`ef263c3`) passed with focus inside the iframe's Zoom in button: Escape closed the host dialog, removed the iframe `src`, and returned focus to `quick-map-header`.
 
 ## Files
 - `index.html` — the map (live copy on Pages).
