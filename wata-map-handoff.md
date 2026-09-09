@@ -70,7 +70,16 @@ All in `index.html` unless noted:
 - Fill Map Narrative + Map Photos for each country.
 - Optional: Airtable→Notion Event sync so surveyed filter numbers self-update without making mWater, a Trip, or a formal Deployment mandatory for historical/manual Events.
 
+## Navigation cohesion — source v1.1.0 (2026-09-09)
+- The public map now follows the shared W.A.T.A. navigation anatomy: 44 px Language and Menu controls, with Language immediately before Menu, plus a right-side grouped drawer.
+- Drawer content is map-specific: the current Impact Map marker, Refresh data, Reset map view, synchronized Language settings, and map-use help.
+- English and Spanish are available from both surfaces. Choices show 🇺🇸 English and 🇪🇸 Español with a selected check; the preference is stored locally under `wata.impactMap.language`.
+- This remains a public-only surface. No profile, sign-out, notification, app-switching or appearance control is present because the standalone map has no authentication, notification backend, launcher context or existing theme feature.
+- The drawer is iframe-safe and supports scrim/close/Escape behavior, focus return, keyboard focus visibility, safe-area padding and reduced motion.
+- Navigation tests live in `index.test.mjs`. This source version is not live until the frontend branch is merged or pushed to the Pages production branch; the Worker and impact-data contract are unchanged by this pass.
+
 ## Files
 - `index.html` — the map (live copy on Pages).
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
+- `index.test.mjs` — static navigation-contract and inline-script syntax tests.
 - this doc.
