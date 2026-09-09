@@ -14,19 +14,25 @@
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
 const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployments (1) / Events
 const NOTION_VERSION = "2025-09-03";
-const CACHE_VERSION = "2026-09-08-country-event-totals";
+const CACHE_VERSION = "2026-09-09-colombia-reported-minimum";
 const PEOPLE_PER_FILTER = 5;
 
-// Verified from the authoritative Notion Events rows. These values are used only
-// while the map integration cannot read Events. Event totals automatically win.
+// Owner-maintained aggregate references for the public map. These values are not
+// survey verification and do not create operational filters, Families, or Events.
+// A reported minimum fills known historical gaps while allowing later Event totals
+// above the minimum to win automatically.
 const IMPACT_FALLBACK = {
   GTM: { filters: 465, served: 2325 },
-  COL: { filters: 143, served: 715 },
+  COL: { filters: 150, served: 750 },
   THA: { filters: 11,  served: 55 },
   MMR: { filters: 132, served: 660 },
   VNM: { filters: 184, served: 920 },
   SLV: { filters: 72,  served: 360 },
   NIC: { filters: 3,   served: 15 },
+};
+
+const REPORTED_MINIMUMS = {
+  COL: 150, // Owner-confirmed filters dropped off in Colombia.
 };
 
 // Notion property names (exact). Change only if you rename columns in Notion.
@@ -141,6 +147,8 @@ export default {
         if (country.served == null || country.served === 0) country.served = fallback.served;
       }
 
+      applyReportedMinimums(countries);
+
       const payload = {
         updated: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
         countries,
@@ -162,6 +170,15 @@ export default {
     }
   },
 };
+
+function applyReportedMinimums(countries) {
+  for (const [iso, minimum] of Object.entries(REPORTED_MINIMUMS)) {
+    const country = countries[iso];
+    if (!country || (country.filters != null && country.filters >= minimum)) continue;
+    country.filters = minimum;
+    country.served = minimum * PEOPLE_PER_FILTER;
+  }
+}
 
 function applyEventTotals(countries, countryPageToIso, events) {
   const totals = new Map();
