@@ -24,5 +24,5 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.1\.0"/);
+  assert.match(html, /name="application-version" content="1\.1\.1"/);
 });

@@ -77,9 +77,17 @@ All in `index.html` unless noted:
 - Light mode has separate ocean, land, border, text, panel, control and hover-contrast values so map geometry and impact colors remain distinct.
 - Version `1.1.0` is live from frontend release revision `95b57162f3a125ff9399273429f6b0eac506b99e`. The release was verified directly at the custom domain in both themes and inside an iframe. The pre-release rollback baseline is `336b312e735c56e378d4831ec48b75063fb6c775`.
 
+## Quick-map modal bridge — v1.1.1
+- Ordinary standalone and public iframe embeds remain inert. The bridge activates only when the iframe URL includes `?quick-map=1` and an embedded approved parent completes the handshake.
+- Approved parent origins are exactly `https://grants.cleanwata.org` and `https://command.cleanwata.org`, with no paths or wildcards.
+- After iframe load, the parent sends `{type: "wata:quick-map-init"}` to target origin `https://map.cleanwata.org`. The child requires both `event.source === window.parent` and an approved exact `event.origin`, then replies `{type: "wata:quick-map-ready"}` to that exact origin.
+- After a successful handshake, Escape inside the iframe sends `{type: "wata:quick-map-close"}` to the stored exact parent origin. Messages contain no private data. The parent must independently require `event.origin === "https://map.cleanwata.org"` and `event.source === iframe.contentWindow` before closing its modal.
+
 ## Files
 - `index.html` — the map (live copy on Pages).
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
 - `theme.test.mjs` — theme-control, persistence and inline-script tests.
+- `quick-map-bridge.js` — explicit-origin quick-map iframe handshake and Escape bridge.
+- `quick-map-bridge.test.mjs` — allowed/disallowed origin, source, standalone and Escape tests.
 - `.github/workflows/deploy-pages.yml` — explicit GitHub Pages release workflow.
 - this doc.

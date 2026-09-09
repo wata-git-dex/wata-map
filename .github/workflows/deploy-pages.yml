@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - index.html
+      - quick-map-bridge.js
       - CNAME
       - .nojekyll
       - .github/workflows/deploy-pages.yml
