@@ -70,7 +70,14 @@ All in `index.html` unless noted:
 - Fill Map Narrative + Map Photos for each country.
 - Optional: Airtable→Notion Event sync so surveyed filter numbers self-update without making mWater, a Trip, or a formal Deployment mandatory for historical/manual Events.
 
+## Appearance toggle — source only (2026-09-09)
+- The standalone map has one 44 px rounded-square sun/moon control beside its KPIs. It switches the complete map surface between purpose-designed dark and light palettes; there is no menu or language control.
+- The current theme is stored under the suite-compatible local key `wata-theme`. The browser theme color, accessible action label and icon update with the selection.
+- Light mode has separate ocean, land, border, text, panel, control and hover-contrast values so map geometry and impact colors remain distinct.
+- This frontend-only change does not alter the Worker or impact-data contract and is not live until the branch is pushed or merged to the Pages production branch.
+
 ## Files
 - `index.html` — the map (live copy on Pages).
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
+- `theme.test.mjs` — theme-control, persistence and inline-script tests.
 - this doc.
