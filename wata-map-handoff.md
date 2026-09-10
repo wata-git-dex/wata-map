@@ -84,6 +84,13 @@ All in `index.html` unless noted:
 - After a successful handshake, Escape inside the iframe sends `{type: "wata:quick-map-close"}` to the stored exact parent origin. Messages contain no private data. The parent must independently require `event.origin === "https://map.cleanwata.org"` and `event.source === iframe.contentWindow` before closing its modal.
 - Map release `fc85e4b3ca1d940038af5534f4e81456af92a09b` is live. Independent production acceptance against Grant Hub v0.3.0 (`ef263c3`) passed with focus inside the iframe's Zoom in button: Escape closed the host dialog, removed the iframe `src`, and returned focus to `quick-map-header`.
 
+## iPhone safe areas — v1.1.2 (2026-09-10)
+- Live release `93b2d9d2d65b26516ec0e146fe08a8d5a18f7b91` adds `viewport-fit=cover` and four-direction `env(safe-area-inset-*)` handling for the header/KPIs/theme toggle, legend/refresh, zoom/reset controls, country drawer, lightbox and toast.
+- The initial head script marks every iframe as `data-embedded="true"` before layout. Embedded mode explicitly zeroes the map's safe-area variables so the Grant/Wix host owns outer insets and padding is not doubled. The quick-map origin/source handshake is unchanged.
+- Browser viewport acceptance passed at 390×844 portrait and 844×390 landscape in dark/light modes. The document matched the viewport in both directions after containing the off-screen country drawer; the landscape Colombia drawer was also inspected.
+- Live production checks confirmed v1.1.2, 7 countries / 1,017 filters / 5,085 people, embedded zero insets, and the Grant quick-map Zoom in → Escape close/unload/focus-return flow.
+- Actual iPhone Safari and Home Screen/installed-mode acceptance remain pending. Browser dimension simulation is not physical-device evidence; this repository has no dedicated PWA manifest or service worker.
+
 ## Files
 - `index.html` — the map (live copy on Pages).
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
