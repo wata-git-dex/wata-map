@@ -15,7 +15,7 @@ An interactive world map that colors countries by their WATA project **Stage** a
 ## Data flow
 ```
 Notion "Country Data" ── country metadata ────────────────────────► Cloudflare Worker
-Notion "Events"       ── completed totals grouped by Country ─────►        │ returns JSON keyed by ISO-3
+Notion "Events"       ── separated lifecycle totals by Country ───►        │ returns JSON keyed by ISO-3
         ▲                                                                    ▼
         │ Cyrus records an Event; Trip/Deployment are optional   index.html on GitHub Pages ──iframe──► Wix
 ```
@@ -26,8 +26,8 @@ The map fetches the Worker on load and on the Refresh button. There is NO 6-hour
 |---|---|---|
 | Name | Title | Country name → matched to a map shape via ISO-3 |
 | Stage | Status | Map color + legend. Values: Active, Pilot, Lead, Not started, Done, Paused. Blank = not painted. |
-| Total Filters (Dropped Off + Distributed) | Rollup | Compatibility value used if direct Event access is unavailable |
-| Total People | Formula | Compatibility value used if direct Event access is unavailable |
+| Total Filters (Dropped Off + Distributed) | Rollup | Legacy field; not a numerical fallback in the prepared reported-distributed contract |
+| Total People | Formula | Legacy field; not a numerical fallback in the prepared reported-distributed contract |
 | Map Narrative | Text | Public story in the popup (internal "Notes" is deliberately NOT read) |
 | Map Photos | Text | Comma/newline image URLs (use Wix `static.wixstatic.com` links; NOT Notion uploads — those expire ~1h) |
 | Regions | Multi-select | Each option → a pill in the popup |
@@ -35,16 +35,28 @@ The map fetches the Worker on load and on the Refresh button. There is NO 6-hour
 
 ## Worker JSON contract (index.html depends on this shape)
 ```json
-{ "updated": "Aug 21",
+{ "updated": "Sep 11",
+  "generatedAt": "2026-09-11T12:00:00.000Z",
+  "sourceFreshness": "2026-09-11T09:30:00.000Z",
+  "dataStatus": "current",
+  "unresolvedAllocation": { "eventCount":0, "distributedFilters":0, "droppedOffFilters":0 },
   "countries": {
-    "GTM": { "status":"Active", "filters":425, "served":2125, "note":"…", "photos":["https://…"], "regions":["San Juan Comalapa"] }
+    "GTM": { "status":"Active", "filters":465, "served":2325, "metrics": { "reportedDistributed": { "filters":465 }, "reportedDroppedOff": { "filters":0 } }, "note":"…", "photos":["https://…"], "regions":["San Juan Comalapa"] }
   } }
 ```
 - `status` = the raw Notion Stage name.
-- `filters`/`served` = number or null (null → shows "—").
+- `filters` = reported distributed filters only; `served` = `filters × 5`, clearly estimated. Either may be null when no qualifying distribution is available.
 - keys = UPPERCASE ISO-3 matching the `id` on each `<path>` in the SVG.
-- Filters are summed from completed (`Distributed` or `Dropped Off`) Events using `Distributed Filters + Dropped-Off`, grouped by the Event's direct Country relation. Trips and formal Deployments are optional. People reached follows the established five-people-per-filter map convention. Results are cached 5 min.
-- Colombia has an owner-confirmed reported minimum of 150 dropped-off filters because the currently linked Notion Event rows total only 143. The public aggregate floor fills that known historical gap without fabricating operational filter, Family, or Event records; future Event totals above 150 win automatically. This correction is live from Worker revision `5946c99d8d696a1af1d069531e7fa671b714e714`.
+- Lifecycle-specific Event fields take precedence over computed `Total Filters`. `Dropped-Off` is reported separately and never added to `filters`. `Total Filters` is only a status-scoped compatibility fallback when the matching lifecycle field is absent. Trips and formal Deployments remain optional.
+- Event Country relations are normalized to distinct ISO values. Duplicate old/current pages for the same ISO count once; zero or multiple distinct ISOs are excluded and reported under `unresolvedAllocation`, never multiplied across countries. Unresolvable legacy relation IDs are counted in the diagnostic even when one distinct resolved ISO allows the Event to remain allocated.
+- `sourceFreshness` is the latest `last_edited_time` among contributing Notion records, not a verification date. `generatedAt` is the Worker response-generation time. A last-known-good fallback is explicitly `dataStatus:"stale"` and retains original source freshness.
+- The Colombia150 hard floor and all undocumented static impact fallbacks are removed from the prepared reported-distributed path. Colombia150 remains documented transport/partner allocation, not household distribution.
+
+## Reported-distributed correction — prepared, not deployed (2026-09-11)
+- Reviewable local changes implement the contract above and update the visible labels to **Distributed**, **Est. people**, **Reported distributed**, **Estimated people**, and **Last source edit**. Frontend and Worker exchange `metricContract:"reported-distributed-v1"`; an older/mismatched Worker is rejected so mixed data cannot be relabeled during deployment ordering.
+- Worker syntax and 12 focused tests pass, covering explicit-field precedence (including Vietnam's 25 when computed total is zero), drop-off separation, same-ISO relation deduplication, unresolved legacy relation surfacing, cross-country unresolved allocation, the raw 936/99 diagnostic fixture, freshness semantics, unavailable-source behavior and stale last-known-good behavior.
+- Production still serves the prior mixed 1,017 / 5,085 calculation. Do not publish raw 936 or any replacement grand total yet.
+- Release gates: preserve/audit the bounded Guatemala 42 and Thailand 9 source reclassifications; reconcile Colombia 105 Notion distributed versus 114 Airtable deployed / 113 explicitly linked Distribution-event assets; retain Myanmar 10 as drop-off pending placement evidence; then produce final per-country before/after and deploy through the normal Worker workflow.
 
 ## How to make common changes (edit points)
 All in `index.html` unless noted:
@@ -90,6 +102,20 @@ All in `index.html` unless noted:
 - Browser viewport acceptance passed at 390×844 portrait and 844×390 landscape in dark/light modes. The document matched the viewport in both directions after containing the off-screen country drawer; the landscape Colombia drawer was also inspected.
 - Live production checks confirmed v1.1.2, 7 countries / 1,017 filters / 5,085 people, embedded zero insets, and the Grant quick-map Zoom in → Escape close/unload/focus-return flow.
 - Actual iPhone Safari and Home Screen/installed-mode acceptance remain pending. Browser dimension simulation is not physical-device evidence; this repository has no dedicated PWA manifest or service worker.
+
+## Country-detail polish — local, not deployed (2026-09-15)
+- The country drawer now reuses each country’s existing SVG silhouette and plots small approximate public-region dots from the `Regions` names. These are intentionally country-relative regional anchors, never household coordinates; the drawer says so directly and falls back safely when detailed area data is unavailable.
+- The two impact-stat cards remain above that inset for every mapped country. A missing verified value is shown as `—` rather than removing the cards or inventing a number.
+- Country clicks animate to a modest focus view instead of jumping aggressively. Mouse-wheel zoom is capped to a much gentler step, and any new pan/zoom input cancels the focus animation. Reduced-motion preferences skip the animation.
+- Dark and light palettes have stronger land, border, panel, text and control separation while preserving the existing teal/blue/yellow stage system and the standalone sun/moon toggle.
+- On phone-width viewports the detail drawer becomes a full-width sheet so the inset map, metrics, area pills and close control remain readable.
+- Visual acceptance completed at 1440×900 and 390×844 in both themes using a temporary local Vietnam fixture; that fixture was removed after review. The structural/theme tests cover the inset, mobile sheet, contrast tokens, gentle wheel zoom and click focus. No production deployment is claimed by this section.
+
+## Live country information restoration — prepared 2026-09-16
+- The visual frontend again accepts the currently deployed Worker response so the country cards and inset maps receive the real Notion-backed totals and `Regions` values instead of remaining blank behind the unreleased `reported-distributed-v1` gate.
+- Until the lifecycle-specific Worker is separately reconciled and released, the UI calls these values **Reported filters** rather than claiming every number is survey-verified or lifecycle-verified distribution. Estimated people remains the reported filter count multiplied by five in the live Worker.
+- Read-only Notion verification on September 16 found seven impact countries and current region metadata for Colombia, El Salvador, Guatemala, Myanmar, Thailand and Vietnam. The deployed Worker returned 1,017 reported filters / 5,085 estimated people with Colombia 150, Guatemala 465, Thailand 11, Myanmar 132, Vietnam 184, El Salvador 72 and Nicaragua 3.
+- This frontend restoration does not modify Notion, Airtable, mWater, Events, Registry assets or the prepared local Worker reconciliation. Production status must be recorded only after the frontend commit is pushed and the Pages workflow and custom domain are verified.
 
 ## Files
 - `index.html` — the map (live copy on Pages).
