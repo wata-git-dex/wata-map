@@ -121,6 +121,12 @@ All in `index.html` unless noted:
 - Screenshot review found the original hand-positioned Colombia and Vietnam dots inaccurate. The follow-up keeps the 190 px, higher-contrast inset but removes every country-box percentage and random fallback. It projects researched WGS84 coordinates directly into the world SVG. Dark/light desktop review confirmed the Colombia, Vietnam and Myanmar positions; Bugwe Kyun and Ngwe Saung intentionally overlap at this country scale because their verified public coordinates are only a few kilometers apart. This remains local until a later explicitly approved production push.
 - Coordinate provenance: Riohacha uses Colombia Minvivienda's published point; La Guajira uses the midpoint of Sociedad Geográfica de Colombia's published bounds; San Juan Comalapa, Ngwe Saung, Bugwe Kyun and La Perla Beach use public OpenStreetMap/GeoNames-derived place records; Mae Sariang uses NGA-derived public geographic data; Dien Bien and Hanoi use published government/regional geography; Central Highlands uses the Wikidata regional center corroborated against published regional bounds.
 
+## Draft map-location input — Notion staging only (2026-09-16)
+- Created **Map Locations — Draft** under Notion **DATA & DOCS**: database `d187d4b9-957c-4a2f-8eb2-eb039cb38580`, data source `84b1b31f-b751-4634-a285-4ee092788d43`.
+- One row represents one public area and provides Location, Country, Latitude, Longitude, Area Type, Map Status, Coordinate Source, Public Note and Last Reviewed. The database description explicitly prohibits household coordinates.
+- Its two-way Country relation added **Map Locations** to Country Data. The entry view is **Enter & review locations** and shows the complete review workflow.
+- This data source is deliberately not read by the Worker or frontend yet. Existing `Regions` and reviewed frontend coordinates remain authoritative until Cyrus marks entries ready, reviews the dataset and explicitly approves the cutover. The future reader should include only `Approved for map` rows with valid Country, latitude, longitude and public label; malformed or incomplete rows must be excluded rather than guessed.
+
 ## Files
 - `index.html` — the map (live copy on Pages).
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
