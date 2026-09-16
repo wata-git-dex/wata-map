@@ -116,6 +116,7 @@ All in `index.html` unless noted:
 - Until the lifecycle-specific Worker is separately reconciled and released, the UI calls these values **Reported filters** rather than claiming every number is survey-verified or lifecycle-verified distribution. Estimated people remains the reported filter count multiplied by five in the live Worker.
 - Read-only Notion verification on September 16 found seven impact countries and current region metadata for Colombia, El Salvador, Guatemala, Myanmar, Thailand and Vietnam. The deployed Worker returned 1,017 reported filters / 5,085 estimated people with Colombia 150, Guatemala 465, Thailand 11, Myanmar 132, Vietnam 184, El Salvador 72 and Nicaragua 3.
 - This frontend restoration does not modify Notion, Airtable, mWater, Events, Registry assets or the prepared local Worker reconciliation. Production status must be recorded only after the frontend commit is pushed and the Pages workflow and custom domain are verified.
+- Screenshot review found the initial Colombia and Vietnam pin centers too close to the silhouette edges. The follow-up enlarges the inset from 170 px to 190 px, reduces framing padding, moves those public-region anchors inward, shrinks the dot footprint and gives the silhouette/pins a higher-contrast cyan-white treatment in both themes. This remains local until a later explicitly approved production push.
 
 ## Files
 - `index.html` — the map (live copy on Pages).

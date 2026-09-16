@@ -43,6 +43,11 @@ test('country detail adds public region markers without household coordinates', 
   assert.match(html, /Approximate regions · not household locations/);
   assert.match(html, /class="country-inset"/);
   assert.match(html, /class="inset-marker"/);
+  assert.match(html, /height:190px/);
+  assert.match(html, /pad=Math\.max\(size\*\.10,1\)/);
+  assert.match(html, /stroke:#8bf3f4/);
+  assert.match(html, /COL:\{'Riohacha':\[\.52,\.29\],'La Guajira':\[\.61,\.24\]\}/);
+  assert.match(html, /VNM:\{'Dien Bien':\[\.30,\.22\],'Hanoi':\[\.54,\.20\],'Central Highlands':\[\.58,\.58\]\}/);
   assert.match(html, /\.card\{width:100vw\}/);
   assert.match(html, /const metrics=`<div class="metrics">/);
   assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Reported filters<\/span>/);
