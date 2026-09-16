@@ -38,16 +38,19 @@ test('live reported totals use non-survey-verification wording', () => {
 });
 
 test('country detail adds public region markers without household coordinates', () => {
-  assert.match(html, /const REGION_POINTS=/);
+  assert.match(html, /const REGION_COORDS=/);
+  assert.match(html, /x:\(lon\+180\)\/360\*1000,y:\(90-lat\)\/180\*500/);
   assert.match(html, /function countryInset\(/);
-  assert.match(html, /Approximate regions · not household locations/);
+  assert.match(html, /Public area markers · regional centers approximate/);
+  assert.match(html, /return coordinates\?\[\{region,point:project\(coordinates\)\}\]:\[\]/);
+  assert.doesNotMatch(html, /Unknown future areas fall back|const fallback=/);
   assert.match(html, /class="country-inset"/);
   assert.match(html, /class="inset-marker"/);
   assert.match(html, /height:190px/);
   assert.match(html, /pad=Math\.max\(size\*\.10,1\)/);
   assert.match(html, /stroke:#8bf3f4/);
-  assert.match(html, /COL:\{'Riohacha':\[\.52,\.29\],'La Guajira':\[\.61,\.24\]\}/);
-  assert.match(html, /VNM:\{'Dien Bien':\[\.30,\.22\],'Hanoi':\[\.54,\.20\],'Central Highlands':\[\.58,\.58\]\}/);
+  assert.match(html, /COL:\{'Riohacha':\{lat:11\.538416,lon:-72\.916784\},'La Guajira':\{lat:11\.4255,lon:-72\.375\}\}/);
+  assert.match(html, /VNM:\{'Dien Bien':\{lat:21\.40,lon:103\.02\},'Hanoi':\{lat:21\.0285,lon:105\.8542\},'Central Highlands':\{lat:13\.75,lon:108\.25\}\}/);
   assert.match(html, /\.card\{width:100vw\}/);
   assert.match(html, /const metrics=`<div class="metrics">/);
   assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Reported filters<\/span>/);

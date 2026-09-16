@@ -372,15 +372,15 @@ const STAGE = {
 };
 const IMPACT_STAGES=['Active','Pilot','Done']; // counted in the "Countries" headline (where we've actually delivered). Set to ['Active'] for strictly active.
 
-// Country-relative public area markers. These are intentionally approximate regional
-// anchors, never household coordinates. Unknown future areas fall back to the center.
-const REGION_POINTS={
-  COL:{'Riohacha':[.52,.29],'La Guajira':[.61,.24]},
-  GTM:{'San Juan Comalapa':[.54,.53]},
-  THA:{'Mae Sariang':[.27,.34]},
-  MMR:{'Bugwe':[.54,.48],'Ngwe Saung':[.28,.68]},
-  VNM:{'Dien Bien':[.30,.22],'Hanoi':[.54,.20],'Central Highlands':[.58,.58]},
-  SLV:{'La Perla':[.55,.46]},
+// Public WGS84 coordinates for named project areas. These are city, island, beach,
+// or broad regional centers—never household coordinates. Unverified names get no pin.
+const REGION_COORDS={
+  COL:{'Riohacha':{lat:11.538416,lon:-72.916784},'La Guajira':{lat:11.4255,lon:-72.375}},
+  GTM:{'San Juan Comalapa':{lat:14.74071,lon:-90.88771}},
+  THA:{'Mae Sariang':{lat:18.157778,lon:97.933611}},
+  MMR:{'Bugwe':{lat:16.818895,lon:94.393063},'Ngwe Saung':{lat:16.858333,lon:94.391667}},
+  VNM:{'Dien Bien':{lat:21.40,lon:103.02},'Hanoi':{lat:21.0285,lon:105.8542},'Central Highlands':{lat:13.75,lon:108.25}},
+  SLV:{'La Perla':{lat:13.49657,lon:-89.51373}},
 };
 
 /* =========================================================================
@@ -427,17 +427,21 @@ function countryInset(iso,name,regions,color){
   let box;try{box=source.getBBox();}catch{return'';}
   const size=Math.max(box.width,box.height),pad=Math.max(size*.10,1);
   const view=[box.x-pad,box.y-pad,box.width+pad*2,box.height+pad*2].join(' ');
-  const fallback=[[.5,.5],[.43,.38],[.58,.62],[.38,.64]];
-  const markers=(regions||[]).map((region,i)=>{
-    const point=REGION_POINTS[iso]?.[region]||fallback[i%fallback.length];
-    const x=box.x+box.width*point[0],y=box.y+box.height*point[1],r=Math.max(size*.026,.58);
+  const project=({lat,lon})=>({x:(lon+180)/360*1000,y:(90-lat)/180*500});
+  const mapped=(regions||[]).flatMap(region=>{
+    const coordinates=REGION_COORDS[iso]?.[region];
+    return coordinates?[{region,point:project(coordinates)}]:[];
+  });
+  const markers=mapped.map(({point})=>{
+    const {x,y}=point,r=Math.max(size*.026,.58);
     return `<g class="inset-marker" aria-hidden="true" transform="translate(${x} ${y})">
       <circle class="ring" r="${r*1.55}"></circle><circle class="core" r="${r}"></circle></g>`;
   }).join('');
-  const count=(regions||[]).length;
-  const caption=count?`<strong>${count} public ${count===1?'area':'areas'}</strong><span>Approximate regions · not household locations</span>`:
+  const count=(regions||[]).length,mappedCount=mapped.length;
+  const mappedLabel=mappedCount===count?`${count} public ${count===1?'area':'areas'} mapped`:`${mappedCount} of ${count} public ${count===1?'area':'areas'} mapped`;
+  const caption=count?`<strong>${mappedLabel}</strong><span>Public area markers · regional centers approximate</span>`:
     '<strong>Country view</strong><span>No public area detail yet</span>';
-  return `<div class="country-inset" role="img" style="--country-color:${color}" aria-label="Country map of ${esc(name)} with ${count} public project ${count===1?'area':'areas'}">
+  return `<div class="country-inset" role="img" style="--country-color:${color}" aria-label="Country map of ${esc(name)} with ${mappedCount} of ${count} public project ${count===1?'area':'areas'} mapped">
     <svg viewBox="${view}" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><path class="inset-land" d="${esc(source.getAttribute('d'))}"></path>${markers}</svg>
     <div class="inset-caption">${caption}</div></div>`;
 }
