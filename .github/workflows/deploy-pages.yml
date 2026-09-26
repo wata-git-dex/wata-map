@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - index.html
+      - assets/**
+      - manifest.webmanifest
       - quick-map-bridge.js
       - CNAME
       - .nojekyll
