@@ -5,6 +5,7 @@ import worker from "./worker.js";
 
 const COUNTRY_SOURCE = "638d93f9-19bc-8305-a503-07a0b9eaba93";
 const EVENT_SOURCE = "c94d93f9-19bc-83b4-8112-87a824660fb4";
+const EVENT_LEGACY_DATABASE = "381d93f9-19bc-80ae-879e-fb4338d3aec3";
 const guatemalaId = "a37d93f9-19bc-82d2-9146-81bc4152afcb";
 
 function country({
@@ -281,7 +282,7 @@ test("falls back to Notion's legacy database query route on endpoint compatibili
       assert.equal(init.headers["Notion-Version"], "2022-06-28");
       return Response.json({ results: [country({ inCountry: 478 })], has_more: false });
     }
-    if (url.includes(`/databases/${EVENT_SOURCE}/query`)) {
+    if (url.includes(`/databases/${EVENT_LEGACY_DATABASE}/query`)) {
       assert.equal(init.headers["Notion-Version"], "2022-06-28");
       return Response.json({ results: [event({ distributed: 464 })], has_more: false });
     }

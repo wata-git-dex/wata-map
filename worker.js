@@ -13,6 +13,7 @@
 
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
 const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployments (1) / Events
+const EVENT_LEGACY_DATABASE_ID = "381d93f9-19bc-80ae-879e-fb4338d3aec3"; // Filter Events database block (legacy API route)
 const NOTION_VERSION = "2025-09-03";
 const LEGACY_NOTION_VERSION = "2022-06-28";
 const CACHE_VERSION = "2026-10-22-impact-potential-v2";
@@ -119,7 +120,7 @@ export default {
       // Events are the impact ledger. Distribution and drop-off are separate measures.
       // Trip and Deployment relations are optional. A country allocation must resolve to
       // exactly one distinct ISO after duplicate old/current country pages are normalized.
-      const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN);
+      const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN, EVENT_LEGACY_DATABASE_ID);
       const eventResult = applyEventTotals(countries, countryPageToIso, events);
       sourceFreshness = newestTimestamp(sourceFreshness, eventResult.sourceFreshness);
 
@@ -331,7 +332,7 @@ function normalizeNotionId(id) {
 }
 
 // 2025-09-03: query the data source. (Falls back to the legacy databases endpoint if needed.)
-async function queryAll(dsId, token) {
+async function queryAll(dsId, token, legacyDatabaseId = dsId) {
   const out = [];
   const seenCursors = new Set();
   let cursor;
@@ -352,7 +353,7 @@ async function queryAll(dsId, token) {
     if (useLegacyEndpoint) {
       // Some Notion workspaces still expose these collections through the legacy
       // database query route. Use that route only for endpoint-compatibility errors.
-      r = await fetch(`https://api.notion.com/v1/databases/${dsId}/query`, {
+      r = await fetch(`https://api.notion.com/v1/databases/${legacyDatabaseId}/query`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
