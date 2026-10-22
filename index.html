@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.3.0">
+<meta name="application-version" content="1.4.0">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,7 +48,7 @@
   .view-option:hover,.view-option:focus-visible{background:var(--surface);outline:none}.view-option[aria-selected="true"]{background:rgba(45,190,158,.14);border-color:rgba(45,190,158,.48)}
   .view-swatch{width:20px;height:20px;border-radius:6px;border:1px solid var(--line);flex:0 0 auto}.view-swatch.impact-view{background:linear-gradient(135deg,#2DBE9E 0 50%,#F5B841 50%)}
   .view-swatch.stress-view{background:linear-gradient(135deg,#55b98b 0 28%,#edc84f 28% 55%,#ef8b43 55% 78%,#d54b4b 78%)}
-  .view-swatch.access-view{background:linear-gradient(135deg,#d54b4b 0 24%,#ef8b43 24% 45%,#edc84f 45% 65%,#6bc7bb 65% 82%,#2DBE9E 82%)}
+  .view-swatch.gap-view{background:linear-gradient(135deg,#2DBE9E 0 20%,#6bc7bb 20% 40%,#edc84f 40% 60%,#ef8b43 60% 80%,#d54b4b 80%)}
   .view-option span:last-child{display:flex;flex-direction:column;gap:3px}.view-option b{font-size:13px}.view-option small{font-size:10px;color:var(--dim)}
   .impact{pointer-events:auto;display:flex;justify-content:flex-end;align-items:stretch;gap:0;padding:5px;background:var(--control);
     backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 26px rgba(0,0,0,.12)}
@@ -56,7 +56,7 @@
   .kpi+.kpi{border-left:1px solid var(--line)}
   .kpi b{font-size:22px;display:block;line-height:1;font-variant-numeric:tabular-nums}
   .kpi span{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-  .theme-toggle{width:44px;height:44px;flex:0 0 44px;margin-left:5px;border-radius:10px;border:0;background:transparent;
+  .theme-toggle{width:40px;height:40px;flex:0 0 40px;margin:0;border-radius:10px;border:1px solid transparent;background:transparent;
     color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:background .2s ease,color .2s ease,border-color .2s ease}
   .theme-toggle:hover{border-color:#2DBE9E;background:color-mix(in srgb,var(--control) 82%,#2DBE9E)}
   .theme-toggle:focus-visible{outline:3px solid #59C2D6;outline-offset:2px}
@@ -68,8 +68,8 @@
   svg#map{width:100%;height:100%;display:block;touch-action:none}
   .cc{fill:var(--land);stroke:var(--land-line);stroke-width:.4;vector-effect:non-scaling-stroke;transition:fill .35s ease,stroke .2s ease,stroke-width .2s ease}
   .cc.on{filter:drop-shadow(0 0 6px var(--map-halo))}
-  .cc.hasproj,.cc.hasstress,.cc.hasaccess{cursor:pointer}
-  [data-map-view="stress"] .cc.wata-country,[data-map-view="access"] .cc.wata-country{stroke:var(--wata-outline);stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
+  .cc.hasproj,.cc.hasstress,.cc.hasgap{cursor:pointer}
+  [data-map-view="stress"] .cc.wata-country,[data-map-view="gap"] .cc.wata-country{stroke:var(--wata-outline);stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
 
   .legend{position:absolute;left:calc(18px + var(--safe-left));bottom:calc(18px + var(--safe-bottom));z-index:6;background:var(--control);
     backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:170px;transition:background .2s ease,border-color .2s ease}
@@ -186,7 +186,7 @@
         <div class="view-menu" id="viewMenu" role="listbox" aria-label="Map view" hidden>
           <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
           <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
-          <button class="view-option" type="button" role="option" data-view="access" aria-selected="false"><span class="view-swatch access-view"></span><span><b>Drinking Water Access</b><small>At least basic service · WHO/UNICEF</small></span></button>
+          <button class="view-option" type="button" role="option" data-view="gap" aria-selected="false"><span class="view-swatch gap-view"></span><span><b>Safe Drinking Water Gap</b><small>Without safely managed service · WHO/UNICEF</small></span></button>
         </div>
       </div>
     </div>
@@ -194,10 +194,6 @@
       <div class="kpi"><b id="kCountries">0</b><span>Countries</span></div>
       <div class="kpi"><b id="kInCountry">—</b><span>Total filters</span></div>
       <div class="kpi"><b id="kPotentialPeople">—</b><span>Total impact</span></div>
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="true" title="Switch to light mode">
-        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
-        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-      </button>
     </div>
   </div>
 
@@ -391,10 +387,14 @@
       <span>Last updated <b id="updated">—</b></span>
     </div>
     <div class="source-note" id="stressSource" hidden><a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">WRI Aqueduct 4.0</a><br>Baseline screening data · historical through 2019 · not real-time</div>
-    <div class="source-note" id="accessSource" hidden><a href="https://data.worldbank.org/indicator/SH.H2O.BASW.ZS" target="_blank" rel="noopener noreferrer">WHO/UNICEF JMP via World Bank</a><br>At least basic drinking-water service · latest country estimate · missing data stays neutral</div>
+    <div class="source-note" id="gapSource" hidden><a href="https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS" target="_blank" rel="noopener noreferrer">WHO/UNICEF JMP via World Bank</a><br>Share without safely managed drinking water · national estimate · missing data stays neutral</div>
   </div>
 
   <div class="zoom">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="true" title="Switch to light mode">
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
     <button id="zin" aria-label="Zoom in">+</button>
     <button id="zout" aria-label="Zoom out">&minus;</button>
     <button id="rst" class="rst" aria-label="Reset view" title="Reset view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.9 8A8 8 0 1 1 4 12"/><path d="M4 4v4h4"/></svg></button>
@@ -412,7 +412,7 @@
 
 <script type="module" src="quick-map-bridge.js"></script>
 <script src="water-stress-data.js?v=2023-2019"></script>
-<script src="drinking-water-data.js?v=2024-20261008"></script>
+<script src="drinking-water-data.js?v=safely-managed-2024-20261008"></script>
 <script>
 /* =========================================================================
    EDIT #1 — paste your Cloudflare Worker URL after you deploy it.
@@ -486,7 +486,7 @@ const isTouch=matchMedia('(pointer:coarse)').matches;
 const reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const STAGE_ORDER=Object.keys(STAGE);
 const STRESS_DATA=window.WATA_WATER_STRESS?.countries||{};
-const ACCESS_DATA=window.WATA_DRINKING_WATER?.countries||{};
+const SAFE_WATER_DATA=window.WATA_SAFE_WATER?.countries||{};
 const STRESS_SCALE=[
   {label:'Low',range:'<10%',color:'#55b98b'},
   {label:'Low–medium',range:'10–20%',color:'#a9c95d'},
@@ -494,12 +494,12 @@ const STRESS_SCALE=[
   {label:'High',range:'40–80%',color:'#ef8b43'},
   {label:'Extremely high',range:'>80%',color:'#d54b4b'},
 ];
-const ACCESS_SCALE=[
-  {label:'Critical gap',range:'<50%',color:'#d54b4b'},
-  {label:'Limited access',range:'50–69%',color:'#ef8b43'},
-  {label:'Expanding access',range:'70–84%',color:'#edc84f'},
-  {label:'Broad access',range:'85–94%',color:'#6bc7bb'},
-  {label:'Near universal',range:'≥95%',color:'#2DBE9E'},
+const GAP_SCALE=[
+  {label:'Low gap',range:'<5%',color:'#2DBE9E'},
+  {label:'Moderate gap',range:'5–14%',color:'#6bc7bb'},
+  {label:'Significant gap',range:'15–29%',color:'#edc84f'},
+  {label:'High gap',range:'30–49%',color:'#ef8b43'},
+  {label:'Critical gap',range:'≥50%',color:'#d54b4b'},
 ];
 let currentView='impact';
 
@@ -508,17 +508,17 @@ function stressInfo(iso){
   const [score,category]=record,scale=STRESS_SCALE[category];
   return scale?{score,category,...scale}:null;
 }
-function accessInfo(iso){
-  const record=ACCESS_DATA[iso];if(!record)return null;
-  const [value,year]=record,category=value<50?0:value<70?1:value<85?2:value<95?3:4,scale=ACCESS_SCALE[category];
-  return{value,year,category,...scale};
+function gapInfo(iso){
+  const record=SAFE_WATER_DATA[iso];if(!record)return null;
+  const [managed,year]=record,gap=Math.round((100-managed)*10)/10,category=gap<5?0:gap<15?1:gap<30?2:gap<50?3:4,scale=GAP_SCALE[category];
+  return{managed,gap,year,category,...scale};
 }
 
 function closeViewMenu(){viewMenu.hidden=true;viewTrigger.setAttribute('aria-expanded','false');}
 function setView(view){
-  currentView=['stress','access'].includes(view)?view:'impact';
+  currentView=['stress','gap'].includes(view)?view:'impact';
   document.documentElement.dataset.mapView=currentView;
-  viewLabel.textContent=currentView==='stress'?'Water Stress':currentView==='access'?'Drinking Water Access':'WATA Impact';
+  viewLabel.textContent=currentView==='stress'?'Water Stress':currentView==='gap'?'Safe Drinking Water Gap':'WATA Impact';
   viewMenu.querySelectorAll('[role="option"]').forEach(option=>option.setAttribute('aria-selected',String(option.dataset.view===currentView)));
   closeViewMenu();card.classList.remove('open');paint();renderLegendAndKPIs();
 }
@@ -561,16 +561,16 @@ function applyTheme(theme,persist=true){
 themeToggle.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 
 function paint(){
-  svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj','hasstress','hasaccess','wata-country');el.style.fill='';});
+  svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj','hasstress','hasgap','wata-country');el.style.fill='';});
   if(currentView==='stress'){
     Object.entries(STRESS_DATA).forEach(([iso,record])=>{
       const el=svg.querySelector('#'+CSS.escape(iso)),scale=STRESS_SCALE[record[1]];
       if(el&&scale){el.style.fill=scale.color;el.classList.add('hasstress');}
     });
-  }else if(currentView==='access'){
-    Object.entries(ACCESS_DATA).forEach(([iso])=>{
-      const el=svg.querySelector('#'+CSS.escape(iso)),access=accessInfo(iso);
-      if(el&&access){el.style.fill=access.color;el.classList.add('hasaccess');}
+  }else if(currentView==='gap'){
+    Object.entries(SAFE_WATER_DATA).forEach(([iso])=>{
+      const el=svg.querySelector('#'+CSS.escape(iso)),gap=gapInfo(iso);
+      if(el&&gap){el.style.fill=gap.color;el.classList.add('hasgap');}
     });
   }
   Object.entries(DATA.countries).forEach(([iso,p])=>{
@@ -594,14 +594,14 @@ function renderLegendAndKPIs(){
   document.getElementById('kInCountry').textContent=ink?fmt(inCountry):'—';
   document.getElementById('kPotentialPeople').textContent=ink?fmt(inCountry*PEOPLE_PER_FILTER):'—';
   const rows=document.getElementById('legendRows'); rows.innerHTML='';
-  document.getElementById('legendTitle').textContent=currentView==='stress'?'Water stress':currentView==='access'?'Drinking water access':'Stage';
+  document.getElementById('legendTitle').textContent=currentView==='stress'?'Water stress':currentView==='gap'?'Safe drinking water gap':'Stage';
   document.getElementById('impactUpdated').hidden=currentView!=='impact';
   document.getElementById('stressSource').hidden=currentView!=='stress';
-  document.getElementById('accessSource').hidden=currentView!=='access';
+  document.getElementById('gapSource').hidden=currentView!=='gap';
   if(currentView==='stress')STRESS_SCALE.forEach(scale=>{
     const r=document.createElement('div');r.className='lrow';
     r.innerHTML=`<span class="dot" style="background:${scale.color}"></span>${scale.label}<span class="n">${scale.range}</span>`;rows.appendChild(r);
-  });else if(currentView==='access')ACCESS_SCALE.forEach(scale=>{
+  });else if(currentView==='gap')GAP_SCALE.forEach(scale=>{
     const r=document.createElement('div');r.className='lrow';
     r.innerHTML=`<span class="dot" style="background:${scale.color}"></span>${scale.label}<span class="n">${scale.range}</span>`;rows.appendChild(r);
   });else STAGE_ORDER.filter(k=>counts[k]).forEach(k=>{
@@ -653,11 +653,11 @@ wrap.addEventListener('touchend',()=>{pinchD=0;});
 // hover
 svg.addEventListener('mousemove',e=>{if(isTouch)return;const t=e.target;
   if(t.classList&&t.classList.contains('cc')){
-    const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),access=accessInfo(iso);
+    const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),gap=gapInfo(iso);
     svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));t.classList.add('on');
     tip.innerHTML=currentView==='stress'
       ?`${name}<div class="s">${stress?`${stress.label} water stress · ${stress.range}`:'No Aqueduct data'}${p?' · WATA '+p.status:''}</div>`
-      :currentView==='access'?`${name}<div class="s">${access?`${access.value.toFixed(1)}% with at least basic service · ${access.year}`:'No JMP estimate'}${p?' · WATA '+p.status:''}</div>`
+      :currentView==='gap'?`${name}<div class="s">${gap?`${gap.gap.toFixed(1)}% without safely managed service · ${gap.year}`:'No safely managed estimate'}${p?' · WATA '+p.status:''}</div>`
       :p?`${name}<div class="s">${p.status}${p.filters!=null?' · '+fmt(p.filters)+' distributed':''}</div>`:`${name}<div class="s">No project yet</div>`;
     tip.classList.add('show');tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
   }else{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));}});
@@ -677,11 +677,11 @@ function positionCard(country){
 }
 svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
   if(!(t.classList&&t.classList.contains('cc'))){card.classList.remove('open');return;}
-  const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),access=accessInfo(iso),stage=p&&STAGE[p.status];
+  const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),gap=gapInfo(iso),stage=p&&STAGE[p.status];
   if(currentView==='impact'&&!stage)return;
   if(currentView==='stress'&&!stress&&!stage)return;
-  if(currentView==='access'&&!access&&!stage)return;
-  const c=stage?stage.color:stress?.color||access.color;
+  if(currentView==='gap'&&!gap&&!stage)return;
+  const c=stage?stage.color:stress?.color||gap.color;
   const countryTotal=stage?(p.potentialFilters==null?p.filters:Math.max(p.filters||0,p.potentialFilters)):null;
   const metrics=stage?`<div class="metrics">
     <div class="metric"><b>${fmt(p.filters)}</b><span>Filters distributed</span></div>
@@ -692,9 +692,9 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
     <span class="context-label">Baseline water stress</span><strong>${stress.label} (${stress.range})</strong>
     <p>Aqueduct score ${stress.score.toFixed(2)} of 5. Baseline screening data using historical conditions through 2019—not a local assessment or real-time reading. <a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">Source: WRI Aqueduct 4.0</a></p>
   </div>`:'';
-  const accessBlock=currentView==='access'&&access?`<div class="layer-context">
-    <span class="context-label">Drinking water access · ${access.year}</span><strong>${access.value.toFixed(1)}% with at least basic service</strong>
-    <p>${access.label}. An improved water source within a 30-minute round trip; this is not the same as a safely managed or laboratory-confirmed potable supply. <a href="https://data.worldbank.org/indicator/SH.H2O.BASW.ZS" target="_blank" rel="noopener noreferrer">Source: WHO/UNICEF JMP via World Bank</a></p>
+  const gapBlock=currentView==='gap'&&gap?`<div class="layer-context">
+    <span class="context-label">Safe drinking water gap · ${gap.year}</span><strong>${gap.gap.toFixed(1)}% without safely managed service</strong>
+    <p>${gap.managed.toFixed(1)}% has safely managed service nationally. Safely managed means the source is on premises, available when needed, and free from faecal and priority chemical contamination. National averages can hide major local disparities. <a href="https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS" target="_blank" rel="noopener noreferrer">Source: WHO/UNICEF JMP via World Bank</a></p>
   </div>`:'';
   const inset=stage?countryInset(iso,name,p.regions,c):'';
   const regions=stage&&p.regions&&p.regions.length?`<div class="seclbl">Areas</div>
@@ -709,7 +709,7 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
   const pill=stage?`${p.status}`:currentView==='stress'?'Aqueduct baseline':'JMP estimate';
   cardBody.innerHTML=`<span class="pill" style="background:${c}22;color:${c};border:1px solid ${c}55">
     <span class="dot" style="background:${c}"></span>${pill}</span>
-    <h2>${esc(name)}</h2>${metrics}${stressBlock}${accessBlock}${inset}${regions}${stage&&p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
+    <h2>${esc(name)}</h2>${metrics}${stressBlock}${gapBlock}${inset}${regions}${stage&&p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
   cardBody.querySelectorAll('.gal img').forEach(img=>{img.onclick=()=>openLB(img.dataset.full);});
   focusCountry(t);
   positionCard(t);card.classList.add('open');card.querySelector('.x').focus();tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});

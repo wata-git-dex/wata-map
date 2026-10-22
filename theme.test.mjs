@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.3\.0"/);
+  assert.match(html, /name="application-version" content="1\.4\.0"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -100,23 +100,27 @@ test('map views expose sourced Aqueduct water stress without replacing WATA impa
   assert.doesNotMatch(waterStress, /-9999/);
 });
 
-test('drinking water access is a sourced, distinct view with honest missing data', () => {
+test('safe drinking water gap is a sourced, distinct view with honest missing data', () => {
   const context = { window: {} };
   vm.runInNewContext(drinkingWater, context);
-  const layer = context.window.WATA_DRINKING_WATER;
-  assert.equal(Object.keys(layer.countries).length, 214);
-  assert.equal(layer.indicator, 'SH.H2O.BASW.ZS');
+  const layer = context.window.WATA_SAFE_WATER;
+  assert.equal(Object.keys(layer.countries).length, 151);
+  assert.equal(layer.indicator, 'SH.H2O.SMDW.ZS');
   assert.equal(layer.source, 'WHO/UNICEF Joint Monitoring Programme (JMP)');
-  assert.deepEqual(Array.from(layer.countries.COL), [97.1, 2024]);
-  assert.deepEqual(Array.from(layer.countries.COD), [35.7, 2024]);
+  assert.deepEqual(Array.from(layer.countries.COL), [74.3, 2024]);
+  assert.deepEqual(Array.from(layer.countries.COD), [11.9, 2024]);
+  assert.deepEqual(Array.from(layer.countries.IND), [76.4, 2024]);
+  assert.deepEqual(Array.from(layer.countries.MMR), [59.7, 2024]);
   assert.equal(layer.countries.NIC, undefined);
+  assert.equal(layer.countries.THA, undefined);
   assert.equal(layer.countries.WLD, undefined);
-  assert.match(html, /data-view="access" aria-selected="false"/);
-  assert.match(html, /Drinking Water Access/);
-  assert.match(html, /currentView==='access'/);
+  assert.match(html, /data-view="gap" aria-selected="false"/);
+  assert.match(html, /Safe Drinking Water Gap/);
+  assert.match(html, /currentView==='gap'/);
   assert.match(html, /missing data stays neutral/);
-  assert.match(html, /this is not the same as a safely managed or laboratory-confirmed potable supply/);
-  assert.match(html, /drinking-water-data\.js\?v=2024-20261008/);
+  assert.match(html, /without safely managed service/);
+  assert.match(html, /National averages can hide major local disparities/);
+  assert.match(html, /drinking-water-data\.js\?v=safely-managed-2024-20261008/);
 });
 
 test('map controls and headline statistics use compact grouped callouts', () => {
@@ -125,6 +129,9 @@ test('map controls and headline statistics use compact grouped callouts', () => 
   assert.match(html, /\.zoom\{[^}]*gap:3px[^}]*padding:5px[^}]*background:var\(--control\)/s);
   assert.match(html, /\.zoom \.rst\{width:40px;padding:0\}/);
   assert.match(html, /<button id="rst" class="rst" aria-label="Reset view" title="Reset view"><svg/);
+  assert.match(html, /<div class="zoom">\s*<button class="theme-toggle" id="themeToggle"/);
+  const impactMarkup = html.match(/<div class="impact">([\s\S]*?)<\/div>\s*<\/div>\s*<div id="wrap">/)?.[1] || '';
+  assert.doesNotMatch(impactMarkup, /themeToggle/);
 });
 
 test('map navigation uses gentle wheel zoom and modest click focus', () => {
