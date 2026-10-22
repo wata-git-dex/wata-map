@@ -24,13 +24,18 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.1\.2"/);
+  assert.match(html, /name="application-version" content="1\.1\.3"/);
 });
 
 test('live totals distinguish actual distribution from potential impact', () => {
   assert.doesNotMatch(html, /IMPACT_CONTRACT/);
+  assert.match(html, />Filters in country<\/span>/);
+  assert.match(html, /potential reach<\/small>/);
   assert.match(html, />Filters distributed<\/span>/);
   assert.match(html, />Est\. people reached<\/span>/);
+  assert.match(html, /const PEOPLE_PER_FILTER=5/);
+  assert.match(html, /const inventory=p\.potentialFilters==null\?p\.filters:Math\.max\(p\.filters,p\.potentialFilters\)/);
+  assert.match(html, /inCountry\*PEOPLE_PER_FILTER/);
   assert.match(html, /Actual impact · distributed/);
   assert.match(html, /Potential impact · in country/);
   assert.match(html, /Last updated/);
