@@ -135,6 +135,7 @@ All in `index.html` unless noted:
 - Map version `1.4.2` no longer intercepts mouse-wheel or trackpad scrolling. Zoom remains available from the `+` / `−` controls, country selection and direct touch gestures, preventing an embedded map from hijacking normal Wix page scrolling.
 - The embed makes one Worker request on load and only another when the user presses Refresh; it has no polling. This release changes no Worker, Notion, Airtable, mWater or Registry data.
 - Source validation before release: 45 automated tests passed, including inline JavaScript, impact semantics, responsive structure, source behavior, map navigation, quick-map origin rules and Worker lifecycle logic. Browser checks confirmed synchronized modes, desktop/mobile fit, non-cancelled wheel events, control zoom and country-focus zoom.
+- Published frontend commit `673d83f5801cca5a9f192946d2387d573cb5d750` through successful GitHub Pages run `39780271145`. Custom-domain verification confirmed impact-summary version `1.3.1`, map version `1.4.2`, live totals `1,045 / 5,225+ / 7`, synchronized Distributed `987 / 4,935+`, Pending `58 / 290+`, no horizontal overflow, uncaptured wheel scrolling and working `+` zoom. This is frontend release evidence only; no Worker or upstream data source was changed.
 
 ## Files
 - `index.html` — the map (live copy on Pages).
