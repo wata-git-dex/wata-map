@@ -14,6 +14,7 @@
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
 const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployments (1) / Events
 const NOTION_VERSION = "2025-09-03";
+const LEGACY_NOTION_VERSION = "2022-06-28";
 const CACHE_VERSION = "2026-10-22-impact-potential-v2";
 const METRIC_CONTRACT = "actual-and-potential-impact-v2";
 const PEOPLE_PER_FILTER = 5;
@@ -346,13 +347,16 @@ async function queryAll(dsId, token) {
       },
       body: JSON.stringify(body),
     });
-    if (r.status === 404) {
-      // legacy fallback for older API behavior
+    const useLegacyEndpoint = r.status === 404
+      || (r.status === 400 && (await r.clone().text()).includes('"code":"invalid_request_url"'));
+    if (useLegacyEndpoint) {
+      // Some Notion workspaces still expose these collections through the legacy
+      // database query route. Use that route only for endpoint-compatibility errors.
       r = await fetch(`https://api.notion.com/v1/databases/${dsId}/query`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Notion-Version": NOTION_VERSION,
+          "Notion-Version": LEGACY_NOTION_VERSION,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),

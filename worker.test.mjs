@@ -270,6 +270,31 @@ test("returns unavailable instead of mixed fallback totals when Events fail", as
   assert.match(payload.error, /Notion 503/);
 });
 
+test("falls back to Notion's legacy database query route on endpoint compatibility errors", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => {
+    const url = String(input);
+    if (url.includes("/data_sources/")) {
+      return Response.json({ code: "invalid_request_url", message: "Invalid request URL." }, { status: 400 });
+    }
+    if (url.includes(`/databases/${COUNTRY_SOURCE}/query`)) {
+      assert.equal(init.headers["Notion-Version"], "2022-06-28");
+      return Response.json({ results: [country({ inCountry: 478 })], has_more: false });
+    }
+    if (url.includes(`/databases/${EVENT_SOURCE}/query`)) {
+      assert.equal(init.headers["Notion-Version"], "2022-06-28");
+      return Response.json({ results: [event({ distributed: 464 })], has_more: false });
+    }
+    return new Response("not found", { status: 404 });
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const { response, payload } = await readPayload();
+  assert.equal(response.status, 200);
+  assert.equal(payload.countries.GTM.filters, 464);
+  assert.equal(payload.countries.GTM.potentialFilters, 478);
+});
+
 test("marks a last-known-good response stale and preserves its source freshness", async (t) => {
   const originalCaches = globalThis.caches;
   const stored = new Map();
