@@ -692,10 +692,13 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
     <span class="context-label">Baseline water stress</span><strong>${stress.label} (${stress.range})</strong>
     <p>Aqueduct score ${stress.score.toFixed(2)} of 5. Baseline screening data using historical conditions through 2019—not a local assessment or real-time reading. <a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">Source: WRI Aqueduct 4.0</a></p>
   </div>`:'';
-  const gapBlock=currentView==='gap'&&gap?`<div class="layer-context">
+  const gapBlock=currentView==='gap'?(gap?`<div class="layer-context">
     <span class="context-label">Safe drinking water gap · ${gap.year}</span><strong>${gap.gap.toFixed(1)}% without safely managed service</strong>
     <p>${gap.managed.toFixed(1)}% has safely managed service nationally. Safely managed means the source is on premises, available when needed, and free from faecal and priority chemical contamination. National averages can hide major local disparities. <a href="https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS" target="_blank" rel="noopener noreferrer">Source: WHO/UNICEF JMP via World Bank</a></p>
-  </div>`:'';
+  </div>`:`<div class="layer-context">
+    <span class="context-label">Safe drinking water gap</span><strong>No national safely managed estimate available</strong>
+    <p>WHO/UNICEF JMP does not publish a national value for this country in the current dataset, so the map leaves it neutral instead of treating missing data as zero.</p>
+  </div>`):'';
   const inset=stage?countryInset(iso,name,p.regions,c):'';
   const regions=stage&&p.regions&&p.regions.length?`<div class="seclbl">Areas</div>
     <div class="regions">${p.regions.map(r=>`<span class="rpill">${esc(r)}</span>`).join('')}</div>`:'';

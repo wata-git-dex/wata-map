@@ -120,6 +120,8 @@ test('safe drinking water gap is a sourced, distinct view with honest missing da
   assert.match(html, /missing data stays neutral/);
   assert.match(html, /without safely managed service/);
   assert.match(html, /National averages can hide major local disparities/);
+  assert.match(html, /No national safely managed estimate available/);
+  assert.match(html, /leaves it neutral instead of treating missing data as zero/);
   assert.match(html, /drinking-water-data\.js\?v=safely-managed-2024-20261008/);
 });
 
