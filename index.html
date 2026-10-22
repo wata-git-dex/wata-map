@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.2">
+<meta name="application-version" content="1.4.3">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ocean:#071721; --land:#263b4c; --land-line:#3a5365;
@@ -167,6 +167,8 @@
     .card.open{transform:translateY(0)}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .action,.view-label,.view-label strong,.view-option b{font-family:'Bangers',cursive;font-weight:400;letter-spacing:.5px;font-size:18px}
+  @media(max-width:640px){.view-label{font-size:0}.view-label strong{font-size:16px}}
 </style>
 <link rel="icon" sizes="32x32" type="image/png" href="/assets/wata-icons/df90ba8d05c2/impact-map/icon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/wata-icons/df90ba8d05c2/impact-map/icon-180.png">
