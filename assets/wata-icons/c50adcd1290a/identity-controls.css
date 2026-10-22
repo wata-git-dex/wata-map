@@ -1,0 +1,5 @@
+/* Identity and settings controls must remain legible under style-src 'self'. */
+html [data-launch-screen] img.launch-logo{width:100px!important;height:100px!important;aspect-ratio:1;object-fit:contain;border-radius:22%;filter:none}
+html svg[data-wata-settings-trigger]{display:block;width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+html img.wata-app-identity{border-radius:22%;object-fit:cover}
+@media(max-height:460px){html [data-launch-screen] img.launch-logo{width:60px!important;height:60px!important}}

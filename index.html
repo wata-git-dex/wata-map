@@ -90,7 +90,7 @@
   .card .body{padding:calc(26px + var(--safe-top)) calc(22px + var(--safe-right)) calc(26px + var(--safe-bottom)) calc(22px + var(--safe-left));overflow:auto}
   .pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px}
   .card h2{margin:14px 0 4px;font-size:24px;font-weight:700;letter-spacing:-.01em}
-  .metrics{display:flex;gap:10px;margin:14px 0 6px}
+  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 6px}
   .metric{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .metric b{font-size:20px;display:block;line-height:1;font-variant-numeric:tabular-nums}
   .metric span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
@@ -108,6 +108,11 @@
     color:var(--dim);font-size:11px;line-height:1.35}
   .inset-caption strong{color:var(--ink);font-weight:600}
   .card .note{color:var(--dim);font-size:14px;line-height:1.55;margin:14px 0 18px;white-space:pre-line}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+  .action{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 14px;border-radius:11px;
+    border:1px solid var(--line);background:rgba(45,190,158,.14);color:var(--ink);font-size:13px;font-weight:700;text-decoration:none}
+  .action:hover,.action:focus-visible{border-color:#2DBE9E;background:rgba(45,190,158,.22);outline:none}
+  .action.secondary{background:transparent;color:var(--dim)}
   .gal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .gal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
   .empty{color:var(--dim);font-size:13px;font-style:italic}
@@ -127,6 +132,16 @@
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+
+
+<link rel="icon" sizes="32x32" type="image/png" href="/assets/wata-icons/c50adcd1290a/impact-map/icon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/wata-icons/c50adcd1290a/impact-map/icon-180.png">
+<meta property="og:image" content="https://map.cleanwata.org/assets/wata-icons/c50adcd1290a/impact-map/icon-512.png">
+<meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:image:alt" content="W.A.T.A. Impact Map app icon"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://map.cleanwata.org/assets/wata-icons/c50adcd1290a/impact-map/icon-512.png">
+<meta property="og:title" content="W.A.T.A. Impact Map">
+<link rel="manifest" href="/manifest.webmanifest?v=icons-v2">
+<link rel="stylesheet" href="/assets/app-icons/final-v2/app-identities.css">
+<link rel="stylesheet" data-wata-icon-style href="/assets/wata-icons/c50adcd1290a/identity-controls.css">
 </head>
 <body>
 <div id="app">
@@ -134,8 +149,8 @@
     <div class="title"><span class="eyebrow">Water Access To All</span><h1>Where we bring clean water</h1></div>
     <div class="impact">
       <div class="kpi"><b id="kCountries">0</b><span>Countries</span></div>
-      <div class="kpi"><b id="kFilters">—</b><span>Reported filters</span></div>
-      <div class="kpi"><b id="kPeople">—</b><span>Est. people</span></div>
+      <div class="kpi"><b id="kFilters">—</b><span>Filters distributed</span></div>
+      <div class="kpi"><b id="kPeople">—</b><span>Est. people reached</span></div>
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="true" title="Switch to light mode">
         <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
         <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -394,20 +409,20 @@ let DATA = {
   sourceFreshness: null,
   generatedAt: null,
   countries: {
-    COL:{status:'Active', filters:null, served:null, note:'', photos:[], regions:[]}, // Colombia
-    SLV:{status:'Active', filters:null, served:null, note:'', photos:[], regions:[]}, // El Salvador
-    GTM:{status:'Active', filters:null, served:null, note:'', photos:[], regions:[]}, // Guatemala
-    MMR:{status:'Active', filters:null, served:null, note:'', photos:[], regions:[]}, // Myanmar
-    NIC:{status:'Pilot',  filters:null, served:null, note:'', photos:[], regions:[]}, // Nicaragua
-    THA:{status:'Active', filters:null, served:null, note:'', photos:[], regions:[]}, // Thailand
-    VNM:{status:'Active', filters:null, served:null, note:'', photos:[], regions:[]}, // Vietnam
-    COD:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // DR Congo
-    CRI:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // Costa Rica
-    GHA:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // Ghana
-    HTI:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // Haiti
-    KEN:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // Kenya
-    PAN:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // Panama
-    TZA:{status:'Lead',   filters:null, served:null, note:'', photos:[], regions:[]}, // Tanzania
+    COL:{status:'Active', filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Colombia
+    SLV:{status:'Active', filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // El Salvador
+    GTM:{status:'Active', filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Guatemala
+    MMR:{status:'Active', filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Myanmar
+    NIC:{status:'Pilot',  filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Nicaragua
+    THA:{status:'Active', filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Thailand
+    VNM:{status:'Active', filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Vietnam
+    COD:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // DR Congo
+    CRI:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Costa Rica
+    GHA:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Ghana
+    HTI:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Haiti
+    KEN:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Kenya
+    PAN:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Panama
+    TZA:{status:'Lead',   filters:null, potentialFilters:null, served:null, note:'', photos:[], regions:[]}, // Tanzania
   }
 };
 /*DATA_END*/
@@ -528,7 +543,7 @@ svg.addEventListener('mousemove',e=>{if(isTouch)return;const t=e.target;
   if(t.classList&&t.classList.contains('cc')){
     const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso];
     svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));t.classList.add('on');
-    tip.innerHTML=p?`${name}<div class="s">${p.status}${p.filters!=null?' · '+fmt(p.filters)+' reported filters':''}</div>`:`${name}<div class="s">No project yet</div>`;
+    tip.innerHTML=p?`${name}<div class="s">${p.status}${p.filters!=null?' · '+fmt(p.filters)+' distributed':''}</div>`:`${name}<div class="s">No project yet</div>`;
     tip.classList.add('show');tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
   }else{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));}});
 svg.addEventListener('mouseleave',()=>{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
@@ -539,18 +554,24 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
   const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso];if(!p||!STAGE[p.status])return;
   const c=STAGE[p.status].color;
   const metrics=`<div class="metrics">
-    <div class="metric"><b>${fmt(p.filters)}</b><span>Reported filters</span></div>
-    <div class="metric"><b>${fmt(p.served)}</b><span>Estimated people</span></div>
+    <div class="metric"><b>${fmt(p.filters)}</b><span>Actual impact · distributed</span></div>
+    <div class="metric"><b>${fmt(p.potentialFilters)}</b><span>Potential impact · in country</span></div>
+    <div class="metric"><b>${fmt(p.served)}</b><span>Est. people reached</span></div>
   </div>`;
   const inset=countryInset(iso,name,p.regions,c);
   const regions=(p.regions&&p.regions.length)?`<div class="seclbl">Areas</div>
     <div class="regions">${p.regions.map(r=>`<span class="rpill">${esc(r)}</span>`).join('')}</div>`:'';
   const gal=(p.photos&&p.photos.length)?`<div class="seclbl">Photos</div>
-    <div class="gal">${p.photos.map(u=>`<img src="${u}" alt="${name}" onclick="openLB('${u}')">`).join('')}</div>`
+    <div class="gal">${p.photos.map(u=>`<img src="${esc(u)}" data-full="${esc(u)}" alt="${esc(name)}">`).join('')}</div>`
     :'';
+  const actions=[];
+  if(p.status==='Lead'&&p.ctaUrl)actions.push(`<a class="action" href="${esc(p.ctaUrl)}" target="_blank" rel="noopener noreferrer">${esc(p.ctaLabel||`Help bring this program to ${name}`)}</a>`);
+  if(p.countryUrl)actions.push(`<a class="action${p.status==='Lead'?' secondary':''}" href="${esc(p.countryUrl)}" target="_blank" rel="noopener noreferrer">Explore ${esc(name)}</a>`);
+  const actionBlock=actions.length?`<div class="actions">${actions.join('')}</div>`:'';
   cardBody.innerHTML=`<span class="pill" style="background:${c}22;color:${c};border:1px solid ${c}55">
     <span class="dot" style="background:${c}"></span>${p.status}</span>
-    <h2>${esc(name)}</h2>${metrics}${inset}${regions}${p.note?`<div class="note">${p.note}</div>`:''}${gal}`;
+    <h2>${esc(name)}</h2>${metrics}${inset}${regions}${p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
+  cardBody.querySelectorAll('.gal img').forEach(img=>{img.onclick=()=>openLB(img.dataset.full);});
   focusCountry(t);
   card.classList.add('open');tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
 document.getElementById('cardX').onclick=()=>card.classList.remove('open');
@@ -593,5 +614,7 @@ window.addEventListener('orientationchange',()=>{setTimeout(()=>{vb={...BASE};ap
 
 applyTheme(document.documentElement.dataset.theme,false);paint();renderLegendAndKPIs();applyVB();refresh(true);
 </script>
+<script type="module" src="/assets/app-icons/final-v2/app-identities.mjs"></script>
+<script type="module" data-wata-icon-catalog src="/assets/wata-icons/c50adcd1290a/runtime.mjs"></script>
 </body>
 </html>

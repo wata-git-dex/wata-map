@@ -7,45 +7,29 @@
 //   3. Visit the Worker URL in a browser — you should see JSON.
 //   4. Paste the Worker URL into WORKER_URL at the top of the map's index.html.
 //
-// Country Data supplies country metadata. Completed Events supply impact totals directly by Country.
+// Country Data supplies country metadata. Completed Events supply lifecycle totals directly by Country.
 // A Trip or formal Deployment is optional context and is never required for an Event to count.
 // No new database and no Airtable read.
 
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
 const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployments (1) / Events
 const NOTION_VERSION = "2025-09-03";
-const CACHE_VERSION = "2026-09-09-colombia-reported-minimum";
+const CACHE_VERSION = "2026-10-22-impact-potential-v2";
+const METRIC_CONTRACT = "actual-and-potential-impact-v2";
 const PEOPLE_PER_FILTER = 5;
-
-// Owner-maintained aggregate references for the public map. These values are not
-// survey verification and do not create operational filters, Families, or Events.
-// A reported minimum fills known historical gaps while allowing later Event totals
-// above the minimum to win automatically.
-const IMPACT_FALLBACK = {
-  GTM: { filters: 465, served: 2325 },
-  COL: { filters: 150, served: 750 },
-  THA: { filters: 11,  served: 55 },
-  MMR: { filters: 132, served: 660 },
-  VNM: { filters: 184, served: 920 },
-  SLV: { filters: 72,  served: 360 },
-  NIC: { filters: 3,   served: 15 },
-};
-
-const REPORTED_MINIMUMS = {
-  COL: 150, // Owner-confirmed filters dropped off in Colombia.
-};
 
 // Notion property names (exact). Change only if you rename columns in Notion.
 const PROP = {
   name:    "Name",
   stage:   "Stage",
-  filters: "Total Filters (Dropped Off + Distributed)",
-  people:  "Total People",
-  trips:   "Trips",         // relation used to avoid number lookups for countries with no activity
   notes:   "Map Narrative", // PUBLIC story shown in the popup. (Internal "Notes" is intentionally NOT read.)
   iso:     "ISO3",         // OPTIONAL text column. If present it wins over the name lookup.
   photos:  "Map Photos",   // OPTIONAL text column of comma/newline-separated image URLs.
   regions: "Regions",      // multi-select column; each selected option becomes a pill.
+  countryUrl: "Country Page URL", // OPTIONAL public country/story page.
+  ctaLabel:  "Map CTA Label",     // OPTIONAL public action label, primarily for Lead countries.
+  ctaUrl:    "Map CTA URL",       // OPTIONAL public action destination.
+  inCountry: "Reported Filters in Country", // Owner-confirmed inventory in country, distributed or awaiting distribution.
 };
 
 const EVENT_PROP = {
@@ -71,13 +55,18 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type",
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+    if (request.method !== "GET") {
+      return new Response(null, { status: 405, headers: { ...cors, Allow: "GET, OPTIONS" } });
+    }
 
     try {
       if (!env.NOTION_TOKEN) throw new Error("NOTION_TOKEN secret is not set");
 
       // Notion rollups/formulas are expensive to compute. Cache the finished payload at the edge for 5 minutes.
       const cache = request.method === "GET" && typeof caches !== "undefined" ? caches.default : null;
-      const cacheKey = cache ? new Request(new URL(request.url).origin + `/__wata-map-data-${CACHE_VERSION}`) : null;
+      const origin = new URL(request.url).origin;
+      const cacheKey = cache ? new Request(origin + `/__wata-map-data-${CACHE_VERSION}`) : null;
+      const lastGoodKey = cache ? new Request(origin + `/__wata-map-last-good-${CACHE_VERSION}`) : null;
       const cached = cache && await cache.match(cacheKey);
       if (cached) return cached;
 
@@ -85,7 +74,7 @@ export default {
 
       const countries = {};
       const countryPageToIso = new Map();
-      const numberLookups = [];
+      let sourceFreshness = null;
       for (const p of pages) {
         const name = text(p, PROP.name);
         if (!name) continue;
@@ -100,57 +89,48 @@ export default {
         const stage = status(p, PROP.stage);
         if (!stage) continue; // blank Stage — don't paint
 
+        const metadataFreshness = validTimestamp(p.last_edited_time);
+        sourceFreshness = newestTimestamp(sourceFreshness, metadataFreshness);
+
         const country = countries[iso] = {
           status:  stage,           // raw Notion Stage name — legend matches Notion
-          filters: rollupNumber(p, PROP.filters),
-          served:  anyNumber(p, PROP.people),
+          filters: null,            // compatibility alias: reported distributed filters only
+          potentialFilters: anyNumber(p, PROP.inCountry), // filters physically in country; potential reach, not actual distribution
+          served:  null,            // compatibility alias: filters × PEOPLE_PER_FILTER estimate
           note:    text(p, PROP.notes),
           photos:  urls(text(p, PROP.photos)),
           regions: multiSelect(p, PROP.regions),
+          countryUrl: publicUrl(p, PROP.countryUrl),
+          ctaLabel: text(p, PROP.ctaLabel),
+          ctaUrl: publicUrl(p, PROP.ctaUrl),
+          metadataFreshness,
+          metrics: emptyImpactMetrics(),
         };
-
-        // Data-source queries can return rollup/formula pointers instead of computed numbers.
-        // Fetch the individual properties only for countries related to Trips. If the Trips
-        // relation is unavailable, impact stages are the conservative fallback.
-        const trips = prop(p, PROP.trips)?.relation;
-        // A relation can be returned as an empty array when the related database is not
-        // shared with the integration, even though the country's rollups are populated.
-        // Impact-stage rows must therefore still resolve their computed properties.
-        const hasTrips = (Array.isArray(trips) && trips.length > 0)
-          || ["Active", "Pilot", "Done"].includes(stage);
-        if (hasTrips && (country.filters == null || country.served == null)) {
-          numberLookups.push((async () => {
-            const [filters, served] = await Promise.all([
-              country.filters == null ? pagePropertyNumber(p.id, prop(p, PROP.filters), env.NOTION_TOKEN) : country.filters,
-              country.served == null ? pagePropertyNumber(p.id, prop(p, PROP.people), env.NOTION_TOKEN) : country.served,
-            ]);
-            country.filters = filters;
-            country.served = served;
-          })());
-        }
-      }
-      await Promise.all(numberLookups);
-
-      // Events are the impact ledger. Count completed distribution/drop-off Events
-      // by their direct Country relation; Trip and Deployment relations are optional.
-      try {
-        const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN);
-        applyEventTotals(countries, countryPageToIso, events);
-      } catch (eventError) {
-        console.warn("Event totals unavailable; using Country Data values/fallbacks", eventError?.message || eventError);
+        country.metrics.reportedInCountry = {
+          filters: country.potentialFilters,
+          peoplePotentialEstimate: country.potentialFilters == null ? null : country.potentialFilters * PEOPLE_PER_FILTER,
+          definition: "Owner-confirmed filters physically in country, including distributed filters and filters awaiting distribution; shown as potential impact.",
+          source: "notion-country-data",
+          sourceFreshness: metadataFreshness,
+        };
       }
 
-      for (const [iso, country] of Object.entries(countries)) {
-        const fallback = IMPACT_FALLBACK[iso];
-        if (!fallback || country.filters != null) continue;
-        country.filters = fallback.filters;
-        if (country.served == null || country.served === 0) country.served = fallback.served;
-      }
+      // Events are the impact ledger. Distribution and drop-off are separate measures.
+      // Trip and Deployment relations are optional. A country allocation must resolve to
+      // exactly one distinct ISO after duplicate old/current country pages are normalized.
+      const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN);
+      const eventResult = applyEventTotals(countries, countryPageToIso, events);
+      sourceFreshness = newestTimestamp(sourceFreshness, eventResult.sourceFreshness);
 
-      applyReportedMinimums(countries);
-
+      const generatedAt = new Date().toISOString();
       const payload = {
-        updated: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        updated: displayDate(sourceFreshness),
+        generatedAt,
+        metricContract: METRIC_CONTRACT,
+        sourceFreshness,
+        sourceFreshnessSemantics: "Latest Notion last_edited_time among records contributing metadata or counted metrics; not a verification date.",
+        dataStatus: "current",
+        unresolvedAllocation: eventResult.unresolvedAllocation,
         countries,
       };
       const response = new Response(JSON.stringify(payload), {
@@ -160,55 +140,189 @@ export default {
           "Cache-Control": "public, max-age=300",
         },
       });
-      if (cache) ctx.waitUntil(cache.put(cacheKey, response.clone()));
+      if (cache) {
+        const lastGoodResponse = new Response(JSON.stringify(payload), {
+          headers: {
+            ...cors,
+            "Content-Type": "application/json",
+            "Cache-Control": "public, max-age=604800",
+          },
+        });
+        ctx.waitUntil(Promise.all([
+          cache.put(cacheKey, response.clone()),
+          cache.put(lastGoodKey, lastGoodResponse),
+        ]));
+      }
       return response;
     } catch (err) {
-      return new Response(JSON.stringify({ error: String(err.message || err) }), {
-        status: 500,
+      const cache = request.method === "GET" && typeof caches !== "undefined" ? caches.default : null;
+      if (cache) {
+        const origin = new URL(request.url).origin;
+        const lastGoodKey = new Request(origin + `/__wata-map-last-good-${CACHE_VERSION}`);
+        const lastGood = await cache.match(lastGoodKey);
+        if (lastGood) {
+          const stalePayload = await lastGood.json();
+          stalePayload.lastSuccessfulGeneratedAt = stalePayload.generatedAt || null;
+          stalePayload.generatedAt = new Date().toISOString();
+          stalePayload.dataStatus = "stale";
+          stalePayload.dataError = "Live source temporarily unavailable; showing the last successful payload.";
+          return new Response(JSON.stringify(stalePayload), {
+            headers: {
+              ...cors,
+              "Content-Type": "application/json",
+              "Cache-Control": "public, max-age=60",
+              Warning: '110 - "Response is stale"',
+            },
+          });
+        }
+      }
+      return new Response(JSON.stringify({
+        error: String(err.message || err),
+        generatedAt: new Date().toISOString(),
+        sourceFreshness: null,
+        dataStatus: "unavailable",
+      }), {
+        status: 503,
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
   },
 };
 
-function applyReportedMinimums(countries) {
-  for (const [iso, minimum] of Object.entries(REPORTED_MINIMUMS)) {
-    const country = countries[iso];
-    if (!country || (country.filters != null && country.filters >= minimum)) continue;
-    country.filters = minimum;
-    country.served = minimum * PEOPLE_PER_FILTER;
-  }
-}
-
 function applyEventTotals(countries, countryPageToIso, events) {
   const totals = new Map();
+  const unresolvedAllocation = {
+    eventCount: 0,
+    distributedFilters: 0,
+    droppedOffFilters: 0,
+    reasons: { noCountry: 0, multipleCountries: 0 },
+    unresolvedRelationEventCount: 0,
+    unresolvedRelationCount: 0,
+  };
+  let sourceFreshness = null;
 
   for (const event of events) {
-    if (!["Distributed", "Dropped Off"].includes(status(event, EVENT_PROP.status))) continue;
+    const eventStatus = status(event, EVENT_PROP.status);
+    if (!["Distributed", "Dropped Off"].includes(eventStatus)) continue;
 
-    let filters = anyNumber(event, EVENT_PROP.total);
-    if (filters == null) {
-      const distributed = anyNumber(event, EVENT_PROP.distributed);
-      const droppedOff = anyNumber(event, EVENT_PROP.droppedOff);
-      if (distributed == null && droppedOff == null) continue;
-      filters = (distributed || 0) + (droppedOff || 0);
-    }
+    const lifecycle = eventLifecycleCounts(event, eventStatus);
+    if (lifecycle.distributed == null && lifecycle.droppedOff == null) continue;
 
     const countryRelations = prop(event, EVENT_PROP.country)?.relation;
-    if (!Array.isArray(countryRelations)) continue;
-
-    for (const relation of countryRelations) {
+    const distinctIsos = new Set();
+    let unresolvedRelations = 0;
+    for (const relation of Array.isArray(countryRelations) ? countryRelations : []) {
       const iso = countryPageToIso.get(normalizeNotionId(relation?.id));
-      if (!iso || !countries[iso]) continue;
-      totals.set(iso, (totals.get(iso) || 0) + filters);
+      if (iso && countries[iso]) distinctIsos.add(iso);
+      else unresolvedRelations += 1;
     }
+    if (unresolvedRelations > 0) {
+      unresolvedAllocation.unresolvedRelationEventCount += 1;
+      unresolvedAllocation.unresolvedRelationCount += unresolvedRelations;
+    }
+
+    if (distinctIsos.size !== 1) {
+      unresolvedAllocation.eventCount += 1;
+      unresolvedAllocation.distributedFilters += lifecycle.distributed || 0;
+      unresolvedAllocation.droppedOffFilters += lifecycle.droppedOff || 0;
+      const reason = distinctIsos.size === 0 ? "noCountry" : "multipleCountries";
+      unresolvedAllocation.reasons[reason] += 1;
+      continue;
+    }
+
+    const [iso] = distinctIsos;
+    const total = totals.get(iso) || { distributed: 0, droppedOff: 0, distributedFreshness: null, droppedOffFreshness: null };
+    const eventFreshness = validTimestamp(event.last_edited_time);
+    if (lifecycle.distributed != null) {
+      total.distributed += lifecycle.distributed;
+      total.distributedFreshness = newestTimestamp(total.distributedFreshness, eventFreshness);
+    }
+    if (lifecycle.droppedOff != null) {
+      total.droppedOff += lifecycle.droppedOff;
+      total.droppedOffFreshness = newestTimestamp(total.droppedOffFreshness, eventFreshness);
+    }
+    totals.set(iso, total);
+    sourceFreshness = newestTimestamp(sourceFreshness, eventFreshness);
   }
 
-  for (const [iso, filters] of totals) {
-    countries[iso].filters = filters;
-    // The public map's established impact convention is five people per filter.
-    countries[iso].served = filters * PEOPLE_PER_FILTER;
+  for (const [iso, total] of totals) {
+    const country = countries[iso];
+    country.filters = total.distributed;
+    country.served = total.distributed * PEOPLE_PER_FILTER;
+    country.metrics.reportedDistributed = {
+      filters: total.distributed,
+      peopleEstimate: total.distributed * PEOPLE_PER_FILTER,
+      definition: "Owner-maintained Notion Events reported as distributed; survey coverage is separate.",
+      source: "notion-events",
+      sourceFreshness: total.distributedFreshness,
+    };
+    country.metrics.reportedDroppedOff = {
+      filters: total.droppedOff,
+      definition: "Owner-maintained Notion Events reported as dropped off or transferred; not included in distributed impact.",
+      source: "notion-events",
+      sourceFreshness: total.droppedOffFreshness,
+    };
   }
+
+  return { sourceFreshness, unresolvedAllocation };
+}
+
+function eventLifecycleCounts(event, eventStatus) {
+  const total = anyNumber(event, EVENT_PROP.total);
+  let distributed = anyNumber(event, EVENT_PROP.distributed);
+  let droppedOff = anyNumber(event, EVENT_PROP.droppedOff);
+
+  // Lifecycle-specific fields are authoritative. Total Filters is only a compatibility
+  // fallback for the lifecycle named by Status, net of the other explicit lifecycle.
+  if (distributed == null && eventStatus === "Distributed" && total != null) {
+    distributed = Math.max(0, total - (droppedOff || 0));
+  }
+  if (droppedOff == null && eventStatus === "Dropped Off" && total != null) {
+    droppedOff = Math.max(0, total - (distributed || 0));
+  }
+
+  return { distributed, droppedOff };
+}
+
+function emptyImpactMetrics() {
+  return {
+    reportedInCountry: {
+      filters: null,
+      peoplePotentialEstimate: null,
+      definition: "Owner-confirmed filters physically in country, including distributed filters and filters awaiting distribution; shown as potential impact.",
+      source: "notion-country-data",
+      sourceFreshness: null,
+    },
+    reportedDistributed: {
+      filters: null,
+      peopleEstimate: null,
+      definition: "Owner-maintained Notion Events reported as distributed; survey coverage is separate.",
+      source: "notion-events",
+      sourceFreshness: null,
+    },
+    reportedDroppedOff: {
+      filters: null,
+      definition: "Owner-maintained Notion Events reported as dropped off or transferred; not included in distributed impact.",
+      source: "notion-events",
+      sourceFreshness: null,
+    },
+  };
+}
+
+function validTimestamp(value) {
+  if (!value || Number.isNaN(Date.parse(value))) return null;
+  return new Date(value).toISOString();
+}
+
+function newestTimestamp(left, right) {
+  if (!left) return right || null;
+  if (!right) return left;
+  return Date.parse(left) >= Date.parse(right) ? left : right;
+}
+
+function displayDate(timestamp) {
+  if (!timestamp) return "Unknown";
+  return new Date(timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 function normalizeNotionId(id) {
@@ -218,6 +332,7 @@ function normalizeNotionId(id) {
 // 2025-09-03: query the data source. (Falls back to the legacy databases endpoint if needed.)
 async function queryAll(dsId, token) {
   const out = [];
+  const seenCursors = new Set();
   let cursor;
   do {
     const body = { page_size: 100 };
@@ -245,52 +360,33 @@ async function queryAll(dsId, token) {
     }
     if (!r.ok) throw new Error(`Notion ${r.status}: ${(await r.text()).slice(0, 200)}`);
     const j = await r.json();
-    out.push(...(j.results || []));
-    cursor = j.has_more ? j.next_cursor : undefined;
+    if (!Array.isArray(j.results)) throw new Error("Invalid Notion results");
+    out.push(...j.results);
+    cursor = undefined;
+    if (j.has_more) {
+      if (typeof j.next_cursor !== "string" || !j.next_cursor.trim() || seenCursors.has(j.next_cursor)) {
+        throw new Error("Invalid or repeated Notion pagination cursor");
+      }
+      cursor = j.next_cursor;
+      seenCursors.add(cursor);
+    }
   } while (cursor);
   return out;
-}
-
-// Retrieve a computed formula/rollup value from Notion's page-property endpoint.
-// Aggregated rollups can paginate; the final page contains the completed value.
-async function pagePropertyNumber(pageId, property, token) {
-  if (!pageId || !property?.id) return null;
-  let cursor;
-  let value = null;
-  do {
-    const url = new URL(`https://api.notion.com/v1/pages/${pageId}/properties/${pathPropertyId(property.id)}`);
-    url.searchParams.set("page_size", "100");
-    if (cursor) url.searchParams.set("start_cursor", cursor);
-    const r = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Notion-Version": NOTION_VERSION,
-      },
-    });
-    if (!r.ok) throw new Error(`Notion property ${r.status}: ${(await r.text()).slice(0, 200)}`);
-    const j = await r.json();
-    const n = propertyItemNumber(j);
-    if (n != null) value = n;
-    cursor = j.has_more ? j.next_cursor : undefined;
-  } while (cursor);
-  return value;
-}
-
-function pathPropertyId(id) {
-  try { return encodeURIComponent(decodeURIComponent(id)); }
-  catch { return encodeURIComponent(id); }
-}
-
-function propertyItemNumber(item) {
-  if (typeof item?.number === "number") return item.number;
-  if (typeof item?.formula?.number === "number") return item.formula.number;
-  const rollup = item?.rollup || item?.property_item?.rollup;
-  return rollupVal(rollup);
 }
 
 function prop(p, n)   { return (p.properties && p.properties[n]) || null; }
 function text(p, n)   { const v = prop(p, n); return (v?.title || v?.rich_text || []).map(t => t.plain_text).join("").trim(); }
 function status(p, n) { const v = prop(p, n); return v?.status?.name ?? v?.select?.name ?? null; }
+function publicUrl(p, n) {
+  const raw = prop(p, n)?.url;
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  try {
+    const parsed = new URL(raw.trim());
+    return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
 function anyNumber(p, n) {  // handles number | formula | rollup
   const v = prop(p, n); if (!v) return null;
   if (typeof v.number === "number") return v.number;
@@ -298,7 +394,6 @@ function anyNumber(p, n) {  // handles number | formula | rollup
   if (v.rollup)  return rollupVal(v.rollup);
   return null;
 }
-function rollupNumber(p, n) { const v = prop(p, n); return v?.rollup ? rollupVal(v.rollup) : anyNumber(p, n); }
 function rollupVal(r) {
   if (r == null) return null;
   if (typeof r.number === "number") return r.number;

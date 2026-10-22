@@ -27,12 +27,12 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /name="application-version" content="1\.1\.2"/);
 });
 
-test('live reported totals use non-survey-verification wording', () => {
+test('live totals distinguish actual distribution from potential impact', () => {
   assert.doesNotMatch(html, /IMPACT_CONTRACT/);
-  assert.match(html, />Reported filters<\/span>/);
-  assert.match(html, />Est\. people<\/span>/);
-  assert.match(html, /Reported filters/);
-  assert.match(html, /Estimated people/);
+  assert.match(html, />Filters distributed<\/span>/);
+  assert.match(html, />Est\. people reached<\/span>/);
+  assert.match(html, /Actual impact · distributed/);
+  assert.match(html, /Potential impact · in country/);
   assert.match(html, /Last updated/);
   assert.match(html, /updated: '—'/);
 });
@@ -53,8 +53,9 @@ test('country detail adds public region markers without household coordinates', 
   assert.match(html, /VNM:\{'Dien Bien':\{lat:21\.40,lon:103\.02\},'Hanoi':\{lat:21\.0285,lon:105\.8542\},'Central Highlands':\{lat:13\.75,lon:108\.25\}\}/);
   assert.match(html, /\.card\{width:100vw\}/);
   assert.match(html, /const metrics=`<div class="metrics">/);
-  assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Reported filters<\/span>/);
-  assert.match(html, /<b>\$\{fmt\(p\.served\)\}<\/b><span>Estimated people<\/span>/);
+  assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Actual impact · distributed<\/span>/);
+  assert.match(html, /<b>\$\{fmt\(p\.potentialFilters\)\}<\/b><span>Potential impact · in country<\/span>/);
+  assert.match(html, /<b>\$\{fmt\(p\.served\)\}<\/b><span>Est\. people reached<\/span>/);
 });
 
 test('map navigation uses gentle wheel zoom and modest click focus', () => {
