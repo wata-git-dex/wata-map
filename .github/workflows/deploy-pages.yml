@@ -7,6 +7,7 @@ on:
     paths:
       - index.html
       - impact-summary.html
+      - mission.html
       - assets/**
       - manifest.webmanifest
       - quick-map-bridge.js
