@@ -32,6 +32,7 @@ const PROP = {
   ctaLabel:  "Map CTA Label",     // OPTIONAL public action label, primarily for Lead countries.
   ctaUrl:    "Map CTA URL",       // OPTIONAL public action destination.
   inCountry: "Reported Filters in Country", // Owner-confirmed inventory in country, distributed or awaiting distribution.
+  distributed: "Reported Distributed Filters", // Owner-maintained actual distribution total used when Events cannot be read.
 };
 
 const EVENT_PROP = {
@@ -94,11 +95,12 @@ export default {
         const metadataFreshness = validTimestamp(p.last_edited_time);
         sourceFreshness = newestTimestamp(sourceFreshness, metadataFreshness);
 
+        const reportedDistributed = anyNumber(p, PROP.distributed);
         const country = countries[iso] = {
           status:  stage,           // raw Notion Stage name — legend matches Notion
-          filters: null,            // compatibility alias: reported distributed filters only
+          filters: reportedDistributed, // compatibility alias: actual distributed filters
           potentialFilters: anyNumber(p, PROP.inCountry), // filters physically in country; potential reach, not actual distribution
-          served:  null,            // compatibility alias: filters × PEOPLE_PER_FILTER estimate
+          served:  reportedDistributed == null ? null : reportedDistributed * PEOPLE_PER_FILTER,
           note:    text(p, PROP.notes),
           photos:  urls(text(p, PROP.photos)),
           regions: multiSelect(p, PROP.regions),
@@ -115,13 +117,27 @@ export default {
           source: "notion-country-data",
           sourceFreshness: metadataFreshness,
         };
+        country.metrics.reportedDistributed = {
+          filters: reportedDistributed,
+          peopleEstimate: reportedDistributed == null ? null : reportedDistributed * PEOPLE_PER_FILTER,
+          definition: "Owner-maintained Country Data total reported as distributed; survey coverage is separate.",
+          source: "notion-country-data",
+          sourceFreshness: metadataFreshness,
+        };
       }
 
       // Events are the impact ledger. Distribution and drop-off are separate measures.
       // Trip and Deployment relations are optional. A country allocation must resolve to
       // exactly one distinct ISO after duplicate old/current country pages are normalized.
-      const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN, EVENT_LEGACY_DATABASE_ID);
-      const eventResult = applyEventTotals(countries, countryPageToIso, events);
+      let eventSourceStatus = "country-data";
+      let eventResult = { sourceFreshness: null, unresolvedAllocation: emptyUnresolvedAllocation() };
+      try {
+        const events = await queryAll(EVENT_DATA_SOURCE_ID, env.NOTION_TOKEN, EVENT_LEGACY_DATABASE_ID);
+        eventResult = applyEventTotals(countries, countryPageToIso, events);
+        eventSourceStatus = "events";
+      } catch (eventError) {
+        console.warn("Event totals unavailable; using Reported Distributed Filters from Country Data", eventError?.message || eventError);
+      }
       sourceFreshness = newestTimestamp(sourceFreshness, eventResult.sourceFreshness);
 
       const generatedAt = new Date().toISOString();
@@ -132,6 +148,7 @@ export default {
         sourceFreshness,
         sourceFreshnessSemantics: "Latest Notion last_edited_time among records contributing metadata or counted metrics; not a verification date.",
         dataStatus: "current",
+        eventSourceStatus,
         unresolvedAllocation: eventResult.unresolvedAllocation,
         countries,
       };
@@ -193,14 +210,7 @@ export default {
 
 function applyEventTotals(countries, countryPageToIso, events) {
   const totals = new Map();
-  const unresolvedAllocation = {
-    eventCount: 0,
-    distributedFilters: 0,
-    droppedOffFilters: 0,
-    reasons: { noCountry: 0, multipleCountries: 0 },
-    unresolvedRelationEventCount: 0,
-    unresolvedRelationCount: 0,
-  };
+  const unresolvedAllocation = emptyUnresolvedAllocation();
   let sourceFreshness = null;
 
   for (const event of events) {
@@ -267,6 +277,17 @@ function applyEventTotals(countries, countryPageToIso, events) {
   }
 
   return { sourceFreshness, unresolvedAllocation };
+}
+
+function emptyUnresolvedAllocation() {
+  return {
+    eventCount: 0,
+    distributedFilters: 0,
+    droppedOffFilters: 0,
+    reasons: { noCountry: 0, multipleCountries: 0 },
+    unresolvedRelationEventCount: 0,
+    unresolvedRelationCount: 0,
+  };
 }
 
 function eventLifecycleCounts(event, eventStatus) {

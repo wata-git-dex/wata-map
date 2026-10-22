@@ -16,6 +16,7 @@ function country({
   ctaLabel = "",
   ctaUrl = null,
   inCountry,
+  distributedCountry,
 } = {}) {
   return {
     id,
@@ -29,6 +30,7 @@ function country({
       "Map CTA Label": { rich_text: ctaLabel ? [{ plain_text: ctaLabel }] : [] },
       "Map CTA URL": { url: ctaUrl },
       ...(inCountry === undefined ? {} : { "Reported Filters in Country": { number: inCountry } }),
+      ...(distributedCountry === undefined ? {} : { "Reported Distributed Filters": { number: distributedCountry } }),
       Regions: { multi_select: [] },
     },
   };
@@ -264,11 +266,16 @@ test("reports source freshness from contributing Notion records, separately from
   assert.ok(Date.parse(payload.generatedAt));
 });
 
-test("returns unavailable instead of mixed fallback totals when Events fail", async (t) => {
-  installFetch(t, { countries: [country()], events: [], failEvents: true });
+test("uses the owner-maintained Country Data distribution total when Events cannot be read", async (t) => {
+  installFetch(t, { countries: [country({ inCountry: 478, distributedCountry: 464 })], events: [], failEvents: true });
   const { response, payload } = await readPayload();
-  assert.equal(response.status, 503);
-  assert.match(payload.error, /Notion 503/);
+  assert.equal(response.status, 200);
+  assert.equal(payload.dataStatus, "current");
+  assert.equal(payload.eventSourceStatus, "country-data");
+  assert.equal(payload.countries.GTM.filters, 464);
+  assert.equal(payload.countries.GTM.potentialFilters, 478);
+  assert.equal(payload.countries.GTM.served, 2320);
+  assert.equal(payload.countries.GTM.metrics.reportedDistributed.source, "notion-country-data");
 });
 
 test("falls back to Notion's legacy database query route on endpoint compatibility errors", async (t) => {
@@ -316,15 +323,15 @@ test("marks a last-known-good response stale and preserves its source freshness"
     else globalThis.caches = originalCaches;
   });
 
-  let failEvents = false;
+  let failCountry = false;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input) => {
     const url = String(input);
     if (url.includes(`${COUNTRY_SOURCE}/query`)) {
+      if (failCountry) return new Response("source unavailable", { status: 503 });
       return Response.json({ results: [country()], has_more: false });
     }
     if (url.includes(`${EVENT_SOURCE}/query`)) {
-      if (failEvents) return new Response("source unavailable", { status: 503 });
       return Response.json({ results: [event({ distributed: 40 })], has_more: false });
     }
     return new Response("not found", { status: 404 });
@@ -343,7 +350,7 @@ test("marks a last-known-good response stale and preserves its source freshness"
     if (key.includes("/__wata-map-data-")) stored.delete(key);
   }
 
-  failEvents = true;
+  failCountry = true;
   const staleResponse = await worker.fetch(
     new Request("https://map.test/"),
     { NOTION_TOKEN: "test" },
