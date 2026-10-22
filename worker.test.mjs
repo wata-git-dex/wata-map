@@ -276,6 +276,7 @@ test("falls back to Notion's legacy database query route on endpoint compatibili
   globalThis.fetch = async (input, init = {}) => {
     const url = String(input);
     if (url.includes("/data_sources/")) {
+      assert.equal(init.headers["Notion-Version"], "2026-03-11");
       return Response.json({ code: "invalid_request_url", message: "Invalid request URL." }, { status: 400 });
     }
     if (url.includes(`/databases/${COUNTRY_SOURCE}/query`)) {

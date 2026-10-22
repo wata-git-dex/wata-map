@@ -14,7 +14,7 @@
 const DATA_SOURCE_ID = "638d93f9-19bc-8305-a503-07a0b9eaba93"; // Country Data data source (collection UUID)
 const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployments (1) / Events
 const EVENT_LEGACY_DATABASE_ID = "381d93f9-19bc-80ae-879e-fb4338d3aec3"; // Filter Events database block (legacy API route)
-const NOTION_VERSION = "2025-09-03";
+const NOTION_VERSION = "2026-03-11";
 const LEGACY_NOTION_VERSION = "2022-06-28";
 const CACHE_VERSION = "2026-10-22-impact-potential-v2";
 const METRIC_CONTRACT = "actual-and-potential-impact-v2";
