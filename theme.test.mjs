@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
+const waterStress = await readFile(new URL('./water-stress-data.js', import.meta.url), 'utf8');
 
 test('all inline scripts are valid JavaScript', () => {
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
@@ -24,7 +25,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.1\.4"/);
+  assert.match(html, /name="application-version" content="1\.2\.0"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -60,7 +61,7 @@ test('country detail adds public region markers without household coordinates', 
   assert.match(html, /VNM:\{'Dien Bien':\{lat:21\.40,lon:103\.02\},'Hanoi':\{lat:21\.0285,lon:105\.8542\},'Central Highlands':\{lat:13\.75,lon:108\.25\}\}/);
   assert.match(html, /\.card\{position:fixed;[^}]*width:min\(420px/s);
   assert.match(html, /\.card\{top:auto!important;left:0!important;right:0;bottom:0;width:100%/);
-  assert.match(html, /const metrics=`<div class="metrics">/);
+  assert.match(html, /const metrics=stage\?`<div class="metrics">/);
   assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Filters distributed<\/span>/);
   assert.match(html, /<b>\$\{fmt\(countryTotal\)\}<\/b><span>Total filters in country<\/span>/);
   assert.match(html, /<b>\$\{fmt\(p\.served\)\}<\/b><span>Est\. people reached<\/span>/);
@@ -69,11 +70,38 @@ test('country detail adds public region markers without household coordinates', 
 test('country detail is contextual and every configured country CTA can render', () => {
   assert.match(html, /role="dialog" aria-modal="false"/);
   assert.match(html, /function positionCard\(country\)/);
-  assert.match(html, /if\(p\.ctaUrl\)actions\.push/);
+  assert.match(html, /if\(stage&&p\.ctaUrl\)actions\.push/);
   assert.doesNotMatch(html, /if\(p\.status==='Lead'&&p\.ctaUrl\)/);
   assert.match(html, /p\.status==='Lead'\?'start':'support'/);
   assert.match(html, /\.action\.start\{background:#1976e8/);
   assert.match(html, /\.action\.support\{/);
+});
+
+test('map views expose sourced Aqueduct water stress without replacing WATA impact', () => {
+  const context = { window: {} };
+  vm.runInNewContext(waterStress, context);
+  assert.equal(Object.keys(context.window.WATA_WATER_STRESS.countries).length, 164);
+  assert.match(html, /id="viewTrigger"[^>]*aria-haspopup="listbox"/);
+  assert.match(html, /data-view="impact" aria-selected="true"/);
+  assert.match(html, /data-view="stress" aria-selected="false"/);
+  assert.match(html, /function setView\(view\)/);
+  assert.match(html, /currentView==='impact'/);
+  assert.match(html, /currentView==='stress'/);
+  assert.match(html, /WRI Aqueduct 4\.0/);
+  assert.match(html, /Baseline screening data · historical through 2019 · not real-time/);
+  assert.match(html, /Baseline screening data using historical conditions through 2019—not a local assessment or real-time reading/);
+  assert.match(html, /\[data-map-view="stress"\] \.cc\.wata-country/);
+  assert.match(html, /water-stress-data\.js\?v=2023-2019/);
+  assert.match(waterStress, /Publisher dataset: Aqueduct40_rankings_download_Y2023M07D05\.xlsx/);
+  assert.match(waterStress, /License: CC BY 4\.0/);
+  assert.match(waterStress, /COL:\[\.49614,0\]/);
+  assert.match(waterStress, /THA:\[3\.62301,3\]/);
+  assert.doesNotMatch(waterStress, /-9999/);
+});
+
+test('reset control is wide enough for its visible label', () => {
+  assert.match(html, /\.zoom \.rst\{width:56px;padding:0 7px;font-size:10px;letter-spacing:\.04em\}/);
+  assert.match(html, /<button id="rst" class="rst" aria-label="Reset view">RESET<\/button>/);
 });
 
 test('map navigation uses gentle wheel zoom and modest click focus', () => {

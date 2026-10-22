@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.1.4">
+<meta name="application-version" content="1.2.0">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,9 +31,24 @@
     transition:background .2s ease,color .2s ease}
   .head{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:flex-start;
     justify-content:space-between;gap:12px;padding:calc(16px + var(--safe-top)) calc(18px + var(--safe-right)) 16px calc(18px + var(--safe-left));pointer-events:none}
-  .title{display:flex;flex-direction:column;line-height:1.05}
+  .title{display:flex;flex-direction:column;line-height:1.05;pointer-events:auto}
   .title .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600}
   .title h1{margin:2px 0 0;font-size:clamp(18px,2.4vw,26px);font-weight:700;letter-spacing:-.01em}
+  .view-control{position:relative;margin-top:10px;width:max-content}
+  .view-trigger{min-height:44px;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:13px;
+    background:var(--control);backdrop-filter:blur(8px);color:var(--ink);font:600 12px/1.2 var(--font);cursor:pointer;box-shadow:0 8px 26px rgba(0,0,0,.12)}
+  .view-trigger:hover,.view-trigger:focus-visible{border-color:#59c2d6;outline:none}
+  .view-trigger svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .view-trigger .chev{width:13px;height:13px;transition:transform .18s ease}.view-trigger[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .view-label{color:var(--dim);font-weight:500}.view-label strong{color:var(--ink);font-weight:700}
+  .view-menu{position:absolute;top:calc(100% + 7px);left:0;width:260px;padding:7px;border:1px solid var(--line);border-radius:15px;
+    background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(16px);box-shadow:0 18px 46px rgba(0,0,0,.3);z-index:30}
+  .view-menu[hidden]{display:none}.view-option{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:10px;
+    background:transparent;color:var(--ink);font-family:var(--font);text-align:left;cursor:pointer}
+  .view-option:hover,.view-option:focus-visible{background:var(--surface);outline:none}.view-option[aria-selected="true"]{background:rgba(45,190,158,.14);border-color:rgba(45,190,158,.48)}
+  .view-swatch{width:20px;height:20px;border-radius:6px;border:1px solid var(--line);flex:0 0 auto}.view-swatch.impact-view{background:linear-gradient(135deg,#2DBE9E 0 50%,#F5B841 50%)}
+  .view-swatch.stress-view{background:linear-gradient(135deg,#55b98b 0 28%,#edc84f 28% 55%,#ef8b43 55% 78%,#d54b4b 78%)}
+  .view-option span:last-child{display:flex;flex-direction:column;gap:3px}.view-option b{font-size:13px}.view-option small{font-size:10px;color:var(--dim)}
   .impact{pointer-events:auto;display:flex;justify-content:flex-end;gap:8px;align-items:stretch}
   .kpi{background:var(--control);backdrop-filter:blur(8px);border:1px solid var(--line);
     border-radius:12px;padding:8px 13px;text-align:right;min-width:74px;transition:background .2s ease,border-color .2s ease}
@@ -49,9 +64,10 @@
   #wrap{position:absolute;inset:0;cursor:grab}
   #wrap.drag{cursor:grabbing}
   svg#map{width:100%;height:100%;display:block;touch-action:none}
-  .cc{fill:var(--land);stroke:var(--land-line);stroke-width:.4;vector-effect:non-scaling-stroke;transition:fill .35s ease}
+  .cc{fill:var(--land);stroke:var(--land-line);stroke-width:.4;vector-effect:non-scaling-stroke;transition:fill .35s ease,stroke .2s ease,stroke-width .2s ease}
   .cc.on{filter:drop-shadow(0 0 6px var(--map-halo))}
-  .cc.hasproj{cursor:pointer}
+  .cc.hasproj,.cc.hasstress{cursor:pointer}
+  [data-map-view="stress"] .cc.wata-country{stroke:#66f2dc;stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
 
   .legend{position:absolute;left:calc(18px + var(--safe-left));bottom:calc(18px + var(--safe-bottom));z-index:6;background:var(--control);
     backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:170px;transition:background .2s ease,border-color .2s ease}
@@ -60,6 +76,9 @@
   .dot{width:12px;height:12px;border-radius:4px;flex:0 0 auto}
   .lrow .n{margin-left:auto;color:var(--dim);font-variant-numeric:tabular-nums;font-size:12px}
   .updated{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim)}
+  .updated[hidden],.source-note[hidden]{display:none}
+  .source-note{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:10px;line-height:1.42;color:var(--dim)}
+  .source-note a{color:var(--ink);text-decoration:none;font-weight:700}.source-note a:hover,.source-note a:focus-visible{text-decoration:underline;outline:none}
   .refresh{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--dim);
     cursor:pointer;display:grid;place-items:center;flex:0 0 auto}
   .refresh:hover{color:#2DBE9E;border-color:#2DBE9E}
@@ -67,12 +86,12 @@
   .refresh.spin svg{animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  .zoom{position:absolute;right:calc(18px + var(--safe-right));bottom:calc(18px + var(--safe-bottom));z-index:6;display:flex;flex-direction:column;gap:6px}
-  .zoom button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
+  .zoom{position:absolute;right:calc(18px + var(--safe-right));bottom:calc(18px + var(--safe-bottom));z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .zoom button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
     background:var(--control);backdrop-filter:blur(8px);color:var(--ink);font-size:18px;cursor:pointer;
     display:grid;place-items:center;font-family:var(--font)}
   .zoom button:hover{background:rgba(45,190,158,.18);border-color:#2DBE9E}
-  .zoom .rst{font-size:11px;letter-spacing:.1em}
+  .zoom .rst{width:56px;padding:0 7px;font-size:10px;letter-spacing:.04em}
 
   .tip{position:fixed;z-index:20;pointer-events:none;background:var(--deep);border:1px solid var(--line);
     border-radius:8px;padding:6px 10px;font-size:12px;white-space:nowrap;opacity:0;transform:translateY(4px);
@@ -94,6 +113,10 @@
   .metric{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .metric b{font-size:20px;display:block;line-height:1;font-variant-numeric:tabular-nums}
   .metric span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .layer-context{margin:14px 0 6px;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:var(--surface)}
+  .layer-context .context-label{display:block;margin-bottom:5px;color:var(--dim);font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+  .layer-context strong{font-size:15px}.layer-context p{margin:6px 0 0;color:var(--dim);font-size:11px;line-height:1.42}
+  .layer-context a{color:var(--ink);font-weight:700;text-decoration:none}.layer-context a:hover,.layer-context a:focus-visible{text-decoration:underline;outline:none}
   .seclbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:16px 0 8px}
   .regions{display:flex;flex-wrap:wrap;gap:6px}
   .rpill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 11px;border-radius:999px;background:var(--surface);
@@ -133,6 +156,7 @@
     .impact{width:100%;justify-content:flex-start}
     .kpi{flex:1;min-width:0;padding:8px 9px;text-align:center}
     .kpi b{font-size:20px}
+    .view-menu{position:fixed;top:auto;left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom));width:auto}
     .card{top:auto!important;left:0!important;right:0;bottom:0;width:100%;max-height:min(78dvh,720px);border-radius:22px 22px 0 0;transform:translateY(102%)}
     .card.open{transform:translateY(0)}
   }
@@ -149,7 +173,19 @@
 <body>
 <div id="app">
   <div class="head">
-    <div class="title"><span class="eyebrow">Water Access To All</span><h1>Impact map</h1></div>
+    <div class="title"><span class="eyebrow">Water Access To All</span><h1>Impact map</h1>
+      <div class="view-control" id="viewControl">
+        <button class="view-trigger" id="viewTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="viewMenu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg>
+          <span class="view-label">View: <strong id="viewLabel">WATA Impact</strong></span>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+        <div class="view-menu" id="viewMenu" role="listbox" aria-label="Map view" hidden>
+          <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
+          <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
+        </div>
+      </div>
+    </div>
     <div class="impact">
       <div class="kpi"><b id="kCountries">0</b><span>Countries</span></div>
       <div class="kpi"><b id="kInCountry">—</b><span>Total filters</span></div>
@@ -343,13 +379,14 @@
   </div>
 
   <div class="legend" id="legend">
-    <h3>Stage</h3><div id="legendRows"></div>
-    <div class="updated">
+    <h3 id="legendTitle">Stage</h3><div id="legendRows"></div>
+    <div class="updated" id="impactUpdated">
       <button class="refresh" id="refreshBtn" title="Pull latest from Notion" aria-label="Refresh">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
       </button>
       <span>Last updated <b id="updated">—</b></span>
     </div>
+    <div class="source-note" id="stressSource" hidden><a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">WRI Aqueduct 4.0</a><br>Baseline screening data · historical through 2019 · not real-time</div>
   </div>
 
   <div class="zoom">
@@ -369,6 +406,7 @@
 </div>
 
 <script type="module" src="quick-map-bridge.js"></script>
+<script src="water-stress-data.js?v=2023-2019"></script>
 <script>
 /* =========================================================================
    EDIT #1 — paste your Cloudflare Worker URL after you deploy it.
@@ -434,12 +472,40 @@ let DATA = {
 const svg=document.getElementById('map'), wrap=document.getElementById('wrap');
 const tip=document.getElementById('tip'), card=document.getElementById('card'), cardBody=document.getElementById('cardBody');
 const themeToggle=document.getElementById('themeToggle');
+const viewTrigger=document.getElementById('viewTrigger'),viewMenu=document.getElementById('viewMenu'),viewLabel=document.getElementById('viewLabel');
 const PEOPLE_PER_FILTER=5;
 const fmt=n=>n==null?'—':Number(n).toLocaleString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const isTouch=matchMedia('(pointer:coarse)').matches;
 const reduceMotion=matchMedia('(prefers-reduced-motion:reduce)').matches;
 const STAGE_ORDER=Object.keys(STAGE);
+const STRESS_DATA=window.WATA_WATER_STRESS?.countries||{};
+const STRESS_SCALE=[
+  {label:'Low',range:'<10%',color:'#55b98b'},
+  {label:'Low–medium',range:'10–20%',color:'#a9c95d'},
+  {label:'Medium–high',range:'20–40%',color:'#edc84f'},
+  {label:'High',range:'40–80%',color:'#ef8b43'},
+  {label:'Extremely high',range:'>80%',color:'#d54b4b'},
+];
+let currentView='impact';
+
+function stressInfo(iso){
+  const record=STRESS_DATA[iso];if(!record)return null;
+  const [score,category]=record,scale=STRESS_SCALE[category];
+  return scale?{score,category,...scale}:null;
+}
+
+function closeViewMenu(){viewMenu.hidden=true;viewTrigger.setAttribute('aria-expanded','false');}
+function setView(view){
+  currentView=view==='stress'?'stress':'impact';
+  document.documentElement.dataset.mapView=currentView;
+  viewLabel.textContent=currentView==='stress'?'Water Stress':'WATA Impact';
+  viewMenu.querySelectorAll('[role="option"]').forEach(option=>option.setAttribute('aria-selected',String(option.dataset.view===currentView)));
+  closeViewMenu();card.classList.remove('open');paint();renderLegendAndKPIs();
+}
+viewTrigger.onclick=()=>{const opening=viewMenu.hidden;viewMenu.hidden=!opening;viewTrigger.setAttribute('aria-expanded',String(opening));if(opening)viewMenu.querySelector(`[data-view="${currentView}"]`).focus();};
+viewMenu.querySelectorAll('[data-view]').forEach(option=>option.onclick=()=>setView(option.dataset.view));
+document.addEventListener('click',event=>{if(!document.getElementById('viewControl').contains(event.target))closeViewMenu();});
 
 function countryInset(iso,name,regions,color){
   const source=svg.querySelector('#'+CSS.escape(iso));if(!source)return'';
@@ -476,11 +542,17 @@ function applyTheme(theme,persist=true){
 themeToggle.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 
 function paint(){
-  svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj');el.style.fill='';});
+  svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj','hasstress','wata-country');el.style.fill='';});
+  if(currentView==='stress'){
+    Object.entries(STRESS_DATA).forEach(([iso,record])=>{
+      const el=svg.querySelector('#'+CSS.escape(iso)),scale=STRESS_SCALE[record[1]];
+      if(el&&scale){el.style.fill=scale.color;el.classList.add('hasstress');}
+    });
+  }
   Object.entries(DATA.countries).forEach(([iso,p])=>{
     const st=STAGE[p.status]; if(!st) return;
     const el=svg.querySelector('#'+CSS.escape(iso));
-    if(el){el.style.fill=st.color;el.classList.add('hasproj');}
+    if(el){if(currentView==='impact')el.style.fill=st.color;el.classList.add('hasproj','wata-country');}
   });
 }
 function renderLegendAndKPIs(){
@@ -498,10 +570,15 @@ function renderLegendAndKPIs(){
   document.getElementById('kInCountry').textContent=ink?fmt(inCountry):'—';
   document.getElementById('kPotentialPeople').textContent=ink?fmt(inCountry*PEOPLE_PER_FILTER):'—';
   const rows=document.getElementById('legendRows'); rows.innerHTML='';
-  STAGE_ORDER.filter(k=>counts[k]).forEach(k=>{
+  document.getElementById('legendTitle').textContent=currentView==='stress'?'Water stress':'Stage';
+  document.getElementById('impactUpdated').hidden=currentView==='stress';
+  document.getElementById('stressSource').hidden=currentView!=='stress';
+  if(currentView==='stress')STRESS_SCALE.forEach(scale=>{
     const r=document.createElement('div');r.className='lrow';
-    r.innerHTML=`<span class="dot" style="background:${STAGE[k].color}"></span>${k}<span class="n">${counts[k]}</span>`;
-    rows.appendChild(r);
+    r.innerHTML=`<span class="dot" style="background:${scale.color}"></span>${scale.label}<span class="n">${scale.range}</span>`;rows.appendChild(r);
+  });else STAGE_ORDER.filter(k=>counts[k]).forEach(k=>{
+    const r=document.createElement('div');r.className='lrow';
+    r.innerHTML=`<span class="dot" style="background:${STAGE[k].color}"></span>${k}<span class="n">${counts[k]}</span>`;rows.appendChild(r);
   });
   document.getElementById('updated').textContent=DATA.updated+(DATA.dataStatus==='stale'?' · stale':'');
 }
@@ -548,9 +625,11 @@ wrap.addEventListener('touchend',()=>{pinchD=0;});
 // hover
 svg.addEventListener('mousemove',e=>{if(isTouch)return;const t=e.target;
   if(t.classList&&t.classList.contains('cc')){
-    const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso];
+    const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso);
     svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));t.classList.add('on');
-    tip.innerHTML=p?`${name}<div class="s">${p.status}${p.filters!=null?' · '+fmt(p.filters)+' distributed':''}</div>`:`${name}<div class="s">No project yet</div>`;
+    tip.innerHTML=currentView==='stress'
+      ?`${name}<div class="s">${stress?`${stress.label} water stress · ${stress.range}`:'No Aqueduct data'}${p?' · WATA '+p.status:''}</div>`
+      :p?`${name}<div class="s">${p.status}${p.filters!=null?' · '+fmt(p.filters)+' distributed':''}</div>`:`${name}<div class="s">No project yet</div>`;
     tip.classList.add('show');tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
   }else{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));}});
 svg.addEventListener('mouseleave',()=>{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
@@ -569,27 +648,34 @@ function positionCard(country){
 }
 svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
   if(!(t.classList&&t.classList.contains('cc'))){card.classList.remove('open');return;}
-  const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso];if(!p||!STAGE[p.status])return;
-  const c=STAGE[p.status].color;
-  const countryTotal=p.potentialFilters==null?p.filters:Math.max(p.filters||0,p.potentialFilters);
-  const metrics=`<div class="metrics">
+  const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),stage=p&&STAGE[p.status];
+  if(currentView==='impact'&&!stage)return;
+  if(currentView==='stress'&&!stress&&!stage)return;
+  const c=stage?stage.color:stress.color;
+  const countryTotal=stage?(p.potentialFilters==null?p.filters:Math.max(p.filters||0,p.potentialFilters)):null;
+  const metrics=stage?`<div class="metrics">
     <div class="metric"><b>${fmt(p.filters)}</b><span>Filters distributed</span></div>
     <div class="metric"><b>${fmt(countryTotal)}</b><span>Total filters in country</span></div>
     <div class="metric"><b>${fmt(p.served)}</b><span>Est. people reached</span></div>
-  </div>`;
-  const inset=countryInset(iso,name,p.regions,c);
-  const regions=(p.regions&&p.regions.length)?`<div class="seclbl">Areas</div>
+  </div>`:'';
+  const stressBlock=currentView==='stress'&&stress?`<div class="layer-context">
+    <span class="context-label">Baseline water stress</span><strong>${stress.label} (${stress.range})</strong>
+    <p>Aqueduct score ${stress.score.toFixed(2)} of 5. Baseline screening data using historical conditions through 2019—not a local assessment or real-time reading. <a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">Source: WRI Aqueduct 4.0</a></p>
+  </div>`:'';
+  const inset=stage?countryInset(iso,name,p.regions,c):'';
+  const regions=stage&&p.regions&&p.regions.length?`<div class="seclbl">Areas</div>
     <div class="regions">${p.regions.map(r=>`<span class="rpill">${esc(r)}</span>`).join('')}</div>`:'';
-  const gal=(p.photos&&p.photos.length)?`<div class="seclbl">Photos</div>
+  const gal=stage&&p.photos&&p.photos.length?`<div class="seclbl">Photos</div>
     <div class="gal">${p.photos.map(u=>`<img src="${esc(u)}" data-full="${esc(u)}" alt="${esc(name)}">`).join('')}</div>`
     :'';
   const actions=[];
-  if(p.ctaUrl)actions.push(`<a class="action ${p.status==='Lead'?'start':'support'}" href="${esc(p.ctaUrl)}" target="_blank" rel="noopener noreferrer">${esc(p.ctaLabel||`Help bring this program to ${name}`)}</a>`);
-  if(p.countryUrl)actions.push(`<a class="action${p.status==='Lead'?' secondary':''}" href="${esc(p.countryUrl)}" target="_blank" rel="noopener noreferrer">Explore ${esc(name)}</a>`);
+  if(stage&&p.ctaUrl)actions.push(`<a class="action ${p.status==='Lead'?'start':'support'}" href="${esc(p.ctaUrl)}" target="_blank" rel="noopener noreferrer">${esc(p.ctaLabel||`Help bring this program to ${name}`)}</a>`);
+  if(stage&&p.countryUrl)actions.push(`<a class="action${p.status==='Lead'?' secondary':''}" href="${esc(p.countryUrl)}" target="_blank" rel="noopener noreferrer">Explore ${esc(name)}</a>`);
   const actionBlock=actions.length?`<div class="actions">${actions.join('')}</div>`:'';
+  const pill=stage?`${p.status}`:'Aqueduct baseline';
   cardBody.innerHTML=`<span class="pill" style="background:${c}22;color:${c};border:1px solid ${c}55">
-    <span class="dot" style="background:${c}"></span>${p.status}</span>
-    <h2>${esc(name)}</h2>${metrics}${inset}${regions}${p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
+    <span class="dot" style="background:${c}"></span>${pill}</span>
+    <h2>${esc(name)}</h2>${metrics}${stressBlock}${inset}${regions}${stage&&p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
   cardBody.querySelectorAll('.gal img').forEach(img=>{img.onclick=()=>openLB(img.dataset.full);});
   focusCountry(t);
   positionCard(t);card.classList.add('open');card.querySelector('.x').focus();tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
@@ -599,7 +685,7 @@ document.getElementById('cardX').onclick=()=>card.classList.remove('open');
 const lb=document.getElementById('lb'),lbImg=document.getElementById('lbImg');
 window.openLB=u=>{lbImg.src=u;lb.classList.add('show');};
 lb.onclick=()=>lb.classList.remove('show');
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){lb.classList.remove('show');card.classList.remove('open');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){lb.classList.remove('show');card.classList.remove('open');closeViewMenu();viewTrigger.focus();}});
 
 // toast
 let toastT;const toast=(m)=>{const el=document.getElementById('toast');el.textContent=m;el.className='toast show';
@@ -631,6 +717,7 @@ let _rz;
 window.addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(()=>{clamp();applyVB();},120);});
 window.addEventListener('orientationchange',()=>{setTimeout(()=>{vb={...BASE};applyVB();},250);});
 
+document.documentElement.dataset.mapView=currentView;
 applyTheme(document.documentElement.dataset.theme,false);paint();renderLegendAndKPIs();applyVB();refresh(true);
 </script>
 <script type="module" src="/assets/app-icons/final-v2/app-identities.mjs"></script>
