@@ -1,154 +1,130 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="application-version" content="1.0.0">
-<meta name="theme-color" content="#071721">
-<title>W.A.T.A. Live Impact</title>
+<meta name="application-version" content="1.1.0">
+<meta name="theme-color" content="#000000">
+<title>W.A.T.A. Live Impact Statistics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{color-scheme:dark;--bg:#06151e;--panel:#0c2633;--raised:#123340;--ink:#f2f7f9;--dim:#a9bdc6;--line:rgba(255,255,255,.14);--cyan:#59c2d6;--teal:#2dbe9e;--gold:#f5b841;--blue:#1976e8;--danger:#d66a68;--font:'Space Grotesk',system-ui,-apple-system,Segoe UI,sans-serif}
+  :root{color-scheme:light;--ink:#112f3b;--muted:#5d7480;--line:rgba(17,47,59,.16);--cyan:#19b9e8;--teal:#18a98d;--gold:#f2ad28;--blue:#2553a6;--font:'Space Grotesk',system-ui,-apple-system,Segoe UI,sans-serif}
   *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;background:transparent;color:var(--ink);font-family:var(--font)}
-  body{padding:0}
-  button,a{font:inherit}
-  .snapshot{position:relative;overflow:hidden;min-height:560px;padding:clamp(22px,4vw,52px);border:1px solid var(--line);border-radius:28px;background:
-    radial-gradient(720px 360px at 12% -10%,rgba(89,194,214,.20),transparent 62%),
-    radial-gradient(620px 360px at 95% 110%,rgba(45,190,158,.15),transparent 65%),var(--bg);box-shadow:0 22px 70px rgba(0,0,0,.26)}
-  .snapshot::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='160' viewBox='0 0 320 160'%3E%3Cpath d='M-20 44C45 1 93 85 167 35s120 18 179-5M-28 103c73-45 123 31 194-12s113 34 177-3M-17 145c58-36 115 10 174-19s113 17 177-14' fill='none' stroke='%2359c2d6' stroke-opacity='.28'/%3E%3C/svg%3E")}
-  .content{position:relative;z-index:1;max-width:1280px;margin:0 auto}
-  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
-  .eyebrow{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:var(--cyan);font-size:11px;font-weight:700;letter-spacing:.19em;text-transform:uppercase}
-  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 5px rgba(45,190,158,.12),0 0 14px rgba(45,190,158,.7)}
-  h1{margin:0;font-size:clamp(36px,6vw,72px);line-height:.95;letter-spacing:-.055em}
-  .intro{max-width:620px;margin:14px 0 0;color:var(--dim);font-size:clamp(14px,1.45vw,18px);line-height:1.55}
-  .controls{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin:30px 0 18px}
-  .control-group{min-width:0}
-  .control-label{display:block;margin:0 0 8px;color:var(--dim);font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
-  .segments{display:flex;flex-wrap:wrap;gap:5px;padding:5px;border:1px solid var(--line);border-radius:14px;background:rgba(8,28,39,.76);backdrop-filter:blur(10px)}
-  .segment{min-height:36px;padding:7px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--dim);font-size:12px;font-weight:600;cursor:pointer}
-  .segment:hover,.segment:focus-visible{color:var(--ink);border-color:rgba(89,194,214,.44);outline:none}
-  .segment[aria-pressed="true"]{color:var(--ink);border-color:rgba(45,190,158,.56);background:rgba(45,190,158,.16);box-shadow:inset 0 1px rgba(255,255,255,.06)}
-  .main-grid{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr);gap:16px}
-  .hero,.breakdown{border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(18,51,64,.94),rgba(7,23,33,.94));box-shadow:inset 0 1px rgba(255,255,255,.05)}
-  .hero{position:relative;overflow:hidden;min-height:245px;padding:26px}
-  .hero::after{content:"";position:absolute;right:-36px;bottom:-62px;width:190px;height:190px;border-radius:50%;background:var(--metric-color,var(--teal));filter:blur(70px);opacity:.22}
-  .hero-label{position:relative;z-index:1;color:var(--dim);font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
-  .hero-value{position:relative;z-index:1;margin:22px 0 8px;color:var(--ink);font-size:clamp(54px,8vw,92px);font-weight:700;line-height:.82;letter-spacing:-.065em;font-variant-numeric:tabular-nums}
-  .hero-note{position:relative;z-index:1;max-width:360px;margin:0;color:var(--dim);font-size:13px;line-height:1.48}
-  .coverage{position:relative;z-index:1;display:inline-flex;margin-top:16px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;color:var(--dim);font-size:10px}
-  .breakdown{padding:19px 20px 16px}
-  .breakdown-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-  .breakdown h2{margin:0;font-size:15px}
-  .country-count{color:var(--dim);font-size:11px}
-  .country-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .country{display:grid;grid-template-columns:12px minmax(0,1fr) auto;align-items:center;gap:9px;min-height:50px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035)}
-  .stage-dot{width:9px;height:9px;border-radius:3px;background:var(--stage-color,var(--teal));box-shadow:0 0 12px color-mix(in srgb,var(--stage-color,var(--teal)) 52%,transparent)}
-  .country-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}
-  .country small{display:block;margin-top:2px;color:var(--dim);font-size:9px;text-transform:uppercase;letter-spacing:.08em}
-  .country-value{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-  .foot{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:14px;color:var(--dim);font-size:10px;line-height:1.4}
-  .status{display:flex;align-items:center;gap:7px}.status button{padding:0;border:0;background:transparent;color:var(--cyan);font-size:10px;font-weight:700;cursor:pointer}
-  .status button:hover,.status button:focus-visible{text-decoration:underline;outline:none}
-  .error{color:#ffc6c4}
-  @media (max-width:760px){
-    .snapshot{min-height:0;padding:24px 16px;border-radius:22px}.top{display:block}.controls{display:block;margin-top:24px}.control-group+.control-group{margin-top:13px}.segments{width:100%}.segment{flex:1;padding-inline:8px}.main-grid{grid-template-columns:1fr}.hero{min-height:205px;padding:22px}.country-list{grid-template-columns:repeat(2,minmax(0,1fr))}.country{grid-template-columns:10px minmax(0,1fr) auto;padding-inline:9px}.foot{align-items:flex-start;flex-direction:column;gap:6px}
-  }
-  @media (max-width:430px){.segment{font-size:11px}.metric-segments .segment{flex:1 1 42%}.hero-value{font-size:62px}}
-  @media (max-width:350px){.country-list{grid-template-columns:1fr}}
-  @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+  html,body{margin:0;width:100%;min-height:100%;background:transparent;color:var(--ink);font-family:var(--font)}
+  button{font:inherit}
+  .stats-shell{width:100%;max-width:1380px;margin:0 auto;padding:8px}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch}
+  .stat-card{--accent:var(--cyan);position:relative;display:flex;min-width:0;min-height:294px;overflow:hidden;flex-direction:column;padding:25px 24px 20px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(290px 180px at 92% -10%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 65%),#fff;box-shadow:0 15px 42px rgba(5,29,39,.13),inset 0 1px rgba(255,255,255,.9)}
+  .stat-card::before{content:"";position:absolute;top:0;left:24px;right:24px;height:4px;border-radius:0 0 5px 5px;background:var(--accent)}
+  .filters-card{--accent:var(--cyan)}.people-card{--accent:var(--teal)}.countries-card{--accent:var(--gold)}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .card-name{margin:0;color:var(--blue);font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+  .live{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(24,169,141,.1)}
+  .value{margin:21px 0 5px;font-size:clamp(52px,6vw,82px);font-weight:700;line-height:.86;letter-spacing:-.065em;font-variant-numeric:tabular-nums}
+  .value-label{min-height:24px;margin:0;color:var(--blue);font-size:17px;font-weight:700;line-height:1.25}
+  .value-note{min-height:38px;margin:7px 0 17px;color:var(--muted);font-size:11px;line-height:1.45}
+  .segments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:auto;padding:4px;border:1px solid var(--line);border-radius:13px;background:#eef5f7}
+  .countries-card .segments{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .segment{min-width:0;min-height:42px;padding:7px 5px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .segment:hover,.segment:focus-visible{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));color:var(--ink);outline:none}
+  .segment[aria-pressed="true"]{border-color:color-mix(in srgb,var(--accent) 68%,var(--line));background:#fff;color:var(--ink);box-shadow:0 3px 10px rgba(17,47,59,.09)}
+  .bar-status{display:flex;align-items:center;justify-content:flex-end;gap:7px;width:max-content;min-height:28px;margin:8px 8px 0 auto;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(6,21,30,.88);color:#dce8ec;font-size:10px}
+  .bar-status .live-dot{width:6px;height:6px}.bar-status.error{color:#ffb9b6}.bar-status button{padding:0;border:0;background:transparent;color:#5dd7f5;font-size:10px;font-weight:700;cursor:pointer}
+  .bar-status button:hover,.bar-status button:focus-visible{text-decoration:underline;outline:none}
+  @media (max-width:900px){.stats-grid{grid-template-columns:1fr}.stat-card{min-height:272px}.value{font-size:68px}}
+  @media (max-width:430px){.stats-shell{padding:6px}.stats-grid{gap:12px}.stat-card{min-height:266px;padding:23px 17px 17px;border-radius:18px}.stat-card::before{left:18px;right:18px}.segment{font-size:9px;padding-inline:3px}.value{font-size:62px}.value-label{font-size:16px}.bar-status{justify-content:center;margin-right:auto;text-align:center}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<main class="snapshot">
-  <div class="content">
-    <div class="top">
-      <div>
-        <p class="eyebrow"><span class="live-dot" aria-hidden="true"></span><span id="connectionLabel">Connected impact data</span></p>
-        <h1>Our impact, live.</h1>
-        <p class="intro">Explore filters, estimated reach, and the countries where W.A.T.A. is active, piloting, or building what comes next.</p>
+<main class="stats-shell" aria-label="Live W.A.T.A. impact statistics">
+  <div class="stats-grid">
+    <section class="stat-card filters-card" aria-labelledby="filtersTitle">
+      <div class="card-head"><h2 class="card-name" id="filtersTitle">Filters</h2><span class="live"><span class="live-dot" aria-hidden="true"></span>Live</span></div>
+      <div class="value" id="filterValue" aria-live="polite">—</div>
+      <p class="value-label" id="filterLabel">Total filters</p>
+      <p class="value-note" id="filterNote">Connecting to current impact data…</p>
+      <div class="segments impact-segments" aria-label="Choose filter total">
+        <button class="segment" type="button" data-impact="inventory" aria-pressed="true">Total</button>
+        <button class="segment" type="button" data-impact="distributed" aria-pressed="false">Distributed</button>
+        <button class="segment" type="button" data-impact="ready" aria-pressed="false">Ready</button>
       </div>
-    </div>
+    </section>
 
-    <div class="controls">
-      <div class="control-group">
-        <span class="control-label">Countries</span>
-        <div class="segments" id="stageSegments" aria-label="Filter countries by stage">
-          <button class="segment" type="button" data-stage="impact" aria-pressed="true">Impact</button>
-          <button class="segment" type="button" data-stage="active" aria-pressed="false">Active</button>
-          <button class="segment" type="button" data-stage="pilot" aria-pressed="false">Pilots</button>
-          <button class="segment" type="button" data-stage="lead" aria-pressed="false">Leads</button>
-        </div>
+    <section class="stat-card people-card" aria-labelledby="peopleTitle">
+      <div class="card-head"><h2 class="card-name" id="peopleTitle">People</h2><span class="live"><span class="live-dot" aria-hidden="true"></span>Live</span></div>
+      <div class="value" id="peopleValue" aria-live="polite">—</div>
+      <p class="value-label" id="peopleLabel">Estimated total reach</p>
+      <p class="value-note" id="peopleNote">Changes with the selected filter total.</p>
+      <div class="segments impact-segments" aria-label="Choose estimated impact basis">
+        <button class="segment" type="button" data-impact="inventory" aria-pressed="true">Total</button>
+        <button class="segment" type="button" data-impact="distributed" aria-pressed="false">Distributed</button>
+        <button class="segment" type="button" data-impact="ready" aria-pressed="false">Ready</button>
       </div>
-      <div class="control-group">
-        <span class="control-label">Show</span>
-        <div class="segments metric-segments" id="metricSegments" aria-label="Choose impact metric">
-          <button class="segment" type="button" data-metric="distributed" aria-pressed="true">Distributed</button>
-          <button class="segment" type="button" data-metric="ready" aria-pressed="false">Ready</button>
-          <button class="segment" type="button" data-metric="inventory" aria-pressed="false">Total filters</button>
-          <button class="segment" type="button" data-metric="people" aria-pressed="false">People reached</button>
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <div class="main-grid">
-      <section class="hero" id="hero" aria-live="polite">
-        <div class="hero-label" id="heroLabel">Filters distributed</div>
-        <div class="hero-value" id="heroValue">—</div>
-        <p class="hero-note" id="heroNote">Loading current impact data…</p>
-        <span class="coverage" id="coverage" hidden></span>
-      </section>
-      <section class="breakdown">
-        <div class="breakdown-head"><h2 id="breakdownTitle">Impact countries</h2><span class="country-count" id="countryCount">—</span></div>
-        <div class="country-list" id="countryList"></div>
-      </section>
-    </div>
-    <div class="foot">
-      <span id="updated">Connecting to the W.A.T.A. Impact Map…</span>
-      <span class="status"><span id="dataStatus">Live data</span><button type="button" id="refresh">Refresh</button></span>
-    </div>
+    <section class="stat-card countries-card" aria-labelledby="countriesTitle">
+      <div class="card-head"><h2 class="card-name" id="countriesTitle">Countries</h2><span class="live"><span class="live-dot" aria-hidden="true"></span>Live</span></div>
+      <div class="value" id="countryValue" aria-live="polite">—</div>
+      <p class="value-label" id="countryLabel">Impact countries</p>
+      <p class="value-note" id="countryNote">Countries with active, pilot, or completed impact.</p>
+      <div class="segments" id="countrySegments" aria-label="Choose country stage">
+        <button class="segment" type="button" data-country="impact" aria-pressed="true">Impact</button>
+        <button class="segment" type="button" data-country="active" aria-pressed="false">Active</button>
+        <button class="segment" type="button" data-country="pilot" aria-pressed="false">Pilots</button>
+        <button class="segment" type="button" data-country="lead" aria-pressed="false">Leads</button>
+      </div>
+    </section>
   </div>
+  <div class="bar-status" id="barStatus"><span class="live-dot" aria-hidden="true"></span><span id="updated">Connecting to live data…</span><button type="button" id="refresh">Refresh</button></div>
 </main>
 
 <script>
 const DATA_URL='https://wata-map.cleanwataorg.workers.dev';
-const NAMES={COL:'Colombia',CRI:'Costa Rica',COD:'DR Congo',SLV:'El Salvador',GHA:'Ghana',GTM:'Guatemala',HTI:'Haiti',KEN:'Kenya',MMR:'Myanmar',NIC:'Nicaragua',PAN:'Panama',TZA:'Tanzania',THA:'Thailand',UGA:'Uganda',VNM:'Vietnam'};
-const STAGE_COLOR={Active:'#2DBE9E',Pilot:'#59C2D6',Lead:'#F5B841',Done:'#4FB477',Paused:'#C4726A','Not started':'#8A94A6'};
-const METRICS={
-  distributed:{label:'Filters distributed',color:'#2DBE9E',note:'Filters recorded as distributed through W.A.T.A. programs.',value:p=>p.filters},
-  ready:{label:'Ready to distribute',color:'#F5B841',note:'Known filters in-country that have not yet been recorded as distributed.',value:p=>p.potentialFilters==null?null:Math.max(p.potentialFilters-(p.filters||0),0),coverage:true},
-  inventory:{label:'Total filters in country',color:'#59C2D6',note:'Distributed filters plus reported in-country inventory awaiting distribution.',value:p=>p.potentialFilters==null?p.filters:Math.max(p.potentialFilters,p.filters||0)},
-  people:{label:'Estimated people reached',color:'#1976E8',note:'Estimated at five people per distributed filter.',value:p=>p.served}
+const IMPACT_STAGES=['Active','Pilot','Done'];
+const IMPACT_COPY={
+  inventory:{filterLabel:'Total filters',filterNote:'Distributed filters plus known in-country inventory.',peopleLabel:'Estimated total reach',peopleNote:'Five people per total filter.'},
+  distributed:{filterLabel:'Filters distributed',filterNote:'Filters recorded as distributed through W.A.T.A. programs.',peopleLabel:'Estimated people reached',peopleNote:'Five people per distributed filter.'},
+  ready:{filterLabel:'Ready to distribute',filterNote:'Known reported inventory awaiting distribution.',peopleLabel:'Estimated future reach',peopleNote:'Five people per known ready-to-distribute filter.'}
 };
-let payload=null,currentStage='impact',currentMetric='distributed';
-const $=id=>document.getElementById(id),fmt=n=>n==null?'—':Math.round(n).toLocaleString('en-US');
-function selectedCountries(){
-  if(!payload)return[];
-  const allowed=currentStage==='impact'?['Active','Pilot','Done']:[currentStage[0].toUpperCase()+currentStage.slice(1)];
-  return Object.entries(payload.countries||{}).filter(([,p])=>allowed.includes(p.status)).sort((a,b)=>(NAMES[a[0]]||a[0]).localeCompare(NAMES[b[0]]||b[0]));
+const COUNTRY_COPY={
+  impact:['Impact countries','Active, pilot, or completed impact.'],active:['Active countries','Countries with an active W.A.T.A. program.'],pilot:['Pilot countries','Countries currently in the pilot stage.'],lead:['Country leads','Countries where a future program is being explored.']
+};
+let payload=null,impactMode='inventory',countryMode='impact';
+const $=id=>document.getElementById(id),fmt=value=>value==null?'—':Math.round(value).toLocaleString('en-US');
+function impactCountries(){return Object.values(payload?.countries||{}).filter(country=>IMPACT_STAGES.includes(country.status))}
+function filterTotals(){
+  const countries=impactCountries();
+  const distributed=countries.reduce((sum,country)=>sum+(Number.isFinite(country.filters)?country.filters:0),0);
+  const inventory=countries.reduce((sum,country)=>sum+(country.potentialFilters==null?(Number.isFinite(country.filters)?country.filters:0):Math.max(country.potentialFilters,country.filters||0)),0);
+  const ready=countries.reduce((sum,country)=>sum+(country.potentialFilters==null?0:Math.max(country.potentialFilters-(country.filters||0),0)),0);
+  const inventoryCoverage=countries.filter(country=>country.potentialFilters!=null).length;
+  return{distributed,inventory,ready,inventoryCoverage,countryCount:countries.length};
 }
-function render(){
-  const rows=selectedCountries(),metric=METRICS[currentMetric],values=rows.map(([,p])=>metric.value(p)).filter(Number.isFinite);
-  const total=values.length?values.reduce((sum,value)=>sum+value,0):null;
-  $('hero').style.setProperty('--metric-color',metric.color);$('heroLabel').textContent=metric.label;$('heroValue').textContent=fmt(total);$('heroNote').textContent=metric.note;
-  const known=rows.filter(([,p])=>p.potentialFilters!=null).length;
-  $('coverage').hidden=!metric.coverage;$('coverage').textContent=metric.coverage?`Inventory reported for ${known} of ${rows.length} selected countries`:'';
-  const stageTitle={impact:'Impact countries',active:'Active countries',pilot:'Pilot countries',lead:'Program leads'}[currentStage];
-  $('breakdownTitle').textContent=stageTitle;$('countryCount').textContent=`${rows.length} ${rows.length===1?'country':'countries'}`;
-  $('countryList').innerHTML=rows.length?rows.map(([iso,p])=>{const value=metric.value(p);return `<div class="country" style="--stage-color:${STAGE_COLOR[p.status]||'#8A94A6'}"><span class="stage-dot" aria-hidden="true"></span><span class="country-name">${NAMES[iso]||iso}<small>${p.status}</small></span><span class="country-value">${fmt(value)}</span></div>`}).join(''):'<div class="country"><span class="stage-dot"></span><span class="country-name">No countries in this view</span><span class="country-value">—</span></div>';
+function renderImpact(){
+  if(!payload)return;
+  const totals=filterTotals(),filters=totals[impactMode],copy=IMPACT_COPY[impactMode];
+  $('filterValue').textContent=fmt(filters);$('filterLabel').textContent=copy.filterLabel;$('filterNote').textContent=impactMode==='ready'?`${copy.filterNote} ${totals.inventoryCoverage} of ${totals.countryCount} impact countries currently report inventory totals.`:copy.filterNote;
+  $('peopleValue').textContent=fmt(filters*5);$('peopleLabel').textContent=copy.peopleLabel;$('peopleNote').textContent=copy.peopleNote;
+  document.querySelectorAll('[data-impact]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.impact===impactMode)));
 }
-function setPressed(group,key,value){document.querySelectorAll(`#${group} .segment`).forEach(button=>button.setAttribute('aria-pressed',String(button.dataset[key]===value)))}
-$('stageSegments').onclick=event=>{const button=event.target.closest('[data-stage]');if(!button)return;currentStage=button.dataset.stage;setPressed('stageSegments','stage',currentStage);render()};
-$('metricSegments').onclick=event=>{const button=event.target.closest('[data-metric]');if(!button)return;currentMetric=button.dataset.metric;setPressed('metricSegments','metric',currentMetric);render()};
+function renderCountries(){
+  if(!payload)return;
+  const countries=Object.values(payload.countries||{}),allowed=countryMode==='impact'?IMPACT_STAGES:[countryMode[0].toUpperCase()+countryMode.slice(1)];
+  $('countryValue').textContent=fmt(countries.filter(country=>allowed.includes(country.status)).length);$('countryLabel').textContent=COUNTRY_COPY[countryMode][0];$('countryNote').textContent=COUNTRY_COPY[countryMode][1];
+  document.querySelectorAll('[data-country]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.country===countryMode)));
+}
+document.querySelectorAll('.impact-segments').forEach(group=>group.addEventListener('click',event=>{const button=event.target.closest('[data-impact]');if(!button)return;impactMode=button.dataset.impact;renderImpact()}));
+$('countrySegments').addEventListener('click',event=>{const button=event.target.closest('[data-country]');if(!button)return;countryMode=button.dataset.country;renderCountries()});
 async function load(){
-  $('refresh').disabled=true;$('dataStatus').classList.remove('error');$('dataStatus').textContent='Updating…';
-  try{const response=await fetch(DATA_URL,{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);payload=await response.json();render();$('updated').textContent=`Data updated ${payload.updated||'recently'}`;$('dataStatus').textContent=payload.dataStatus==='stale'?'Last known data':'Connected to live source';$('connectionLabel').textContent=payload.dataStatus==='stale'?'Last known impact data':'Connected impact data'}
-  catch(error){$('heroNote').textContent='Current impact data is temporarily unavailable.';$('updated').textContent='Could not reach the live impact data source.';$('dataStatus').textContent='Try again';$('connectionLabel').textContent='Impact data unavailable';$('dataStatus').classList.add('error')}
+  $('refresh').disabled=true;$('barStatus').classList.remove('error');$('updated').textContent='Updating live data…';
+  try{const response=await fetch(DATA_URL,{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);payload=await response.json();renderImpact();renderCountries();$('updated').textContent=`Live data · updated ${payload.updated||'recently'}`}
+  catch(error){$('filterNote').textContent='Current impact data is temporarily unavailable.';$('peopleNote').textContent='Current impact data is temporarily unavailable.';$('countryNote').textContent='Current impact data is temporarily unavailable.';$('updated').textContent='Live data unavailable';$('barStatus').classList.add('error')}
   finally{$('refresh').disabled=false}
 }
-$('refresh').onclick=load;load();
+$('refresh').addEventListener('click',load);load();
 </script>
 </body>
 </html>
