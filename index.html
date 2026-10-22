@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.1.3">
+<meta name="application-version" content="1.1.4">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,13 +34,11 @@
   .title{display:flex;flex-direction:column;line-height:1.05}
   .title .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600}
   .title h1{margin:2px 0 0;font-size:clamp(18px,2.4vw,26px);font-weight:700;letter-spacing:-.01em}
-  .impact{pointer-events:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;align-items:stretch}
+  .impact{pointer-events:auto;display:flex;justify-content:flex-end;gap:8px;align-items:stretch}
   .kpi{background:var(--control);backdrop-filter:blur(8px);border:1px solid var(--line);
     border-radius:12px;padding:8px 13px;text-align:right;min-width:74px;transition:background .2s ease,border-color .2s ease}
-  .kpi b{font-size:20px;display:block;line-height:1;font-variant-numeric:tabular-nums}
+  .kpi b{font-size:22px;display:block;line-height:1;font-variant-numeric:tabular-nums}
   .kpi span{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-  .kpi small{display:block;margin-top:4px;color:var(--dim);font-size:8px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-  .kpi small strong{color:var(--ink);font-size:9px;font-variant-numeric:tabular-nums}
   .theme-toggle{width:44px;height:44px;flex:0 0 44px;border-radius:13px;border:1px solid var(--line);background:var(--control);
     backdrop-filter:blur(8px);color:var(--ink);cursor:pointer;display:grid;place-items:center;transition:background .2s ease,color .2s ease,border-color .2s ease}
   .theme-toggle:hover{border-color:#2DBE9E;background:color-mix(in srgb,var(--control) 82%,#2DBE9E)}
@@ -81,11 +79,11 @@
     transition:opacity .12s;box-shadow:0 6px 20px rgba(0,0,0,.4)}
   .tip.show{opacity:1;transform:translateY(0)} .tip .s{color:var(--dim);font-size:11px}
 
-  .card{position:absolute;top:0;right:0;height:100%;width:min(360px,86vw);z-index:12;
-    background:linear-gradient(180deg,var(--panel),var(--ocean));border-left:1px solid var(--line);
-    transform:translateX(102%);transition:transform .32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;
-    box-shadow:-20px 0 60px rgba(0,0,0,.45)}
-  .card.open{transform:translateX(0)}
+  .card{position:fixed;top:var(--card-top,50%);left:var(--card-left,50%);width:min(420px,calc(100vw - 36px));max-height:calc(100dvh - 108px);z-index:12;
+    background:linear-gradient(180deg,var(--panel),var(--ocean));border:1px solid var(--line);border-radius:20px;
+    transform:translate(-50%,-46%) scale(.96);opacity:0;visibility:hidden;transition:transform .24s cubic-bezier(.4,0,.2,1),opacity .2s ease;display:flex;flex-direction:column;
+    box-shadow:0 22px 70px rgba(0,0,0,.46)}
+  .card.open{transform:translate(-50%,-50%) scale(1);opacity:1;visibility:visible}
   .card .x{position:absolute;top:calc(14px + var(--safe-top));right:calc(14px + var(--safe-right));width:32px;height:32px;border-radius:8px;border:1px solid var(--line);
     background:transparent;color:var(--dim);cursor:pointer;font-size:16px}
   .card .x:hover{color:var(--ink);border-color:#2DBE9E}
@@ -114,6 +112,9 @@
   .action{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 14px;border-radius:11px;
     border:1px solid var(--line);background:rgba(45,190,158,.14);color:var(--ink);font-size:13px;font-weight:700;text-decoration:none}
   .action:hover,.action:focus-visible{border-color:#2DBE9E;background:rgba(45,190,158,.22);outline:none}
+  .action.start{background:#1976e8;border-color:#65a9ff;color:#fff;box-shadow:0 7px 22px rgba(25,118,232,.25)}
+  .action.start:hover,.action.start:focus-visible{background:#2b86f2;border-color:#9bcaff}
+  .action.support{background:rgba(45,190,158,.2);border-color:rgba(75,226,196,.62)}
   .action.secondary{background:transparent;color:var(--dim)}
   .gal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .gal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
@@ -130,7 +131,10 @@
     .legend{left:calc(12px + var(--safe-left));bottom:calc(12px + var(--safe-bottom));padding:10px 12px;min-width:150px}
     .zoom{right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom))} .head{padding:calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) 12px calc(12px + var(--safe-left));flex-direction:column;align-items:flex-start}
     .impact{width:100%;justify-content:flex-start}
-    .card{width:100vw}
+    .kpi{flex:1;min-width:0;padding:8px 9px;text-align:center}
+    .kpi b{font-size:20px}
+    .card{top:auto!important;left:0!important;right:0;bottom:0;width:100%;max-height:min(78dvh,720px);border-radius:22px 22px 0 0;transform:translateY(102%)}
+    .card.open{transform:translateY(0)}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -148,9 +152,8 @@
     <div class="title"><span class="eyebrow">Water Access To All</span><h1>Impact map</h1></div>
     <div class="impact">
       <div class="kpi"><b id="kCountries">0</b><span>Countries</span></div>
-      <div class="kpi"><b id="kInCountry">—</b><span>Filters in country</span><small><strong id="kPotentialPeople">—</strong> potential reach</small></div>
-      <div class="kpi"><b id="kFilters">—</b><span>Filters distributed</span></div>
-      <div class="kpi"><b id="kPeople">—</b><span>Est. people reached</span></div>
+      <div class="kpi"><b id="kInCountry">—</b><span>Total filters</span></div>
+      <div class="kpi"><b id="kPotentialPeople">—</b><span>Total impact</span></div>
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="true" title="Switch to light mode">
         <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
         <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -355,7 +358,7 @@
     <button id="rst" class="rst" aria-label="Reset view">RESET</button>
   </div>
 
-  <div class="card" id="card">
+  <div class="card" id="card" role="dialog" aria-modal="false" aria-label="Country impact details">
     <button class="x" id="cardX" aria-label="Close">&times;</button>
     <div class="body" id="cardBody"></div>
   </div>
@@ -481,23 +484,19 @@ function paint(){
   });
 }
 function renderLegendAndKPIs(){
-  const counts={}; let f=0,s=0,inCountry=0,fk=false,sk=false,ink=false,impact=0;
+  const counts={}; let inCountry=0,ink=false,impact=0;
   Object.values(DATA.countries).forEach(p=>{
     if(!STAGE[p.status])return;
     counts[p.status]=(counts[p.status]||0)+1;
     if(IMPACT_STAGES.includes(p.status))impact++;
     if(p.filters!=null){
-      f+=p.filters;fk=true;
       const inventory=p.potentialFilters==null?p.filters:Math.max(p.filters,p.potentialFilters);
       inCountry+=inventory;ink=true;
     } else if(p.potentialFilters!=null){inCountry+=p.potentialFilters;ink=true;}
-    if(p.served!=null){s+=p.served;sk=true;}
   });
   document.getElementById('kCountries').textContent=impact;
   document.getElementById('kInCountry').textContent=ink?fmt(inCountry):'—';
   document.getElementById('kPotentialPeople').textContent=ink?fmt(inCountry*PEOPLE_PER_FILTER):'—';
-  document.getElementById('kFilters').textContent=fk?fmt(f):'—';
-  document.getElementById('kPeople').textContent=sk?fmt(s):'—';
   const rows=document.getElementById('legendRows'); rows.innerHTML='';
   STAGE_ORDER.filter(k=>counts[k]).forEach(k=>{
     const r=document.createElement('div');r.className='lrow';
@@ -557,13 +556,25 @@ svg.addEventListener('mousemove',e=>{if(isTouch)return;const t=e.target;
 svg.addEventListener('mouseleave',()=>{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
 
 // click -> card
+function positionCard(country){
+  if(matchMedia('(max-width:640px)').matches)return;
+  const countryBox=country.getBoundingClientRect(),margin=18;
+  const width=Math.min(420,innerWidth-margin*2),height=Math.min(card.scrollHeight,innerHeight-108);
+  let left=countryBox.right+18+width/2;
+  if(left+width/2>innerWidth-margin)left=countryBox.left-18-width/2;
+  left=Math.max(margin+width/2,Math.min(innerWidth-margin-width/2,left));
+  let top=countryBox.top+countryBox.height/2;
+  top=Math.max(54+height/2,Math.min(innerHeight-margin-height/2,top));
+  card.style.setProperty('--card-left',`${left}px`);card.style.setProperty('--card-top',`${top}px`);
+}
 svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
-  if(!(t.classList&&t.classList.contains('cc')))return;
+  if(!(t.classList&&t.classList.contains('cc'))){card.classList.remove('open');return;}
   const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso];if(!p||!STAGE[p.status])return;
   const c=STAGE[p.status].color;
+  const countryTotal=p.potentialFilters==null?p.filters:Math.max(p.filters||0,p.potentialFilters);
   const metrics=`<div class="metrics">
-    <div class="metric"><b>${fmt(p.filters)}</b><span>Actual impact · distributed</span></div>
-    <div class="metric"><b>${fmt(p.potentialFilters)}</b><span>Potential impact · in country</span></div>
+    <div class="metric"><b>${fmt(p.filters)}</b><span>Filters distributed</span></div>
+    <div class="metric"><b>${fmt(countryTotal)}</b><span>Total filters in country</span></div>
     <div class="metric"><b>${fmt(p.served)}</b><span>Est. people reached</span></div>
   </div>`;
   const inset=countryInset(iso,name,p.regions,c);
@@ -573,7 +584,7 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
     <div class="gal">${p.photos.map(u=>`<img src="${esc(u)}" data-full="${esc(u)}" alt="${esc(name)}">`).join('')}</div>`
     :'';
   const actions=[];
-  if(p.status==='Lead'&&p.ctaUrl)actions.push(`<a class="action" href="${esc(p.ctaUrl)}" target="_blank" rel="noopener noreferrer">${esc(p.ctaLabel||`Help bring this program to ${name}`)}</a>`);
+  if(p.ctaUrl)actions.push(`<a class="action ${p.status==='Lead'?'start':'support'}" href="${esc(p.ctaUrl)}" target="_blank" rel="noopener noreferrer">${esc(p.ctaLabel||`Help bring this program to ${name}`)}</a>`);
   if(p.countryUrl)actions.push(`<a class="action${p.status==='Lead'?' secondary':''}" href="${esc(p.countryUrl)}" target="_blank" rel="noopener noreferrer">Explore ${esc(name)}</a>`);
   const actionBlock=actions.length?`<div class="actions">${actions.join('')}</div>`:'';
   cardBody.innerHTML=`<span class="pill" style="background:${c}22;color:${c};border:1px solid ${c}55">
@@ -581,7 +592,7 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
     <h2>${esc(name)}</h2>${metrics}${inset}${regions}${p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
   cardBody.querySelectorAll('.gal img').forEach(img=>{img.onclick=()=>openLB(img.dataset.full);});
   focusCountry(t);
-  card.classList.add('open');tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
+  positionCard(t);card.classList.add('open');card.querySelector('.x').focus();tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
 document.getElementById('cardX').onclick=()=>card.classList.remove('open');
 
 // lightbox + keys

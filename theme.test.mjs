@@ -24,20 +24,22 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.1\.3"/);
+  assert.match(html, /name="application-version" content="1\.1\.4"/);
 });
 
-test('live totals distinguish actual distribution from potential impact', () => {
+test('headline stays simple while country detail distinguishes inventory and distribution', () => {
   assert.doesNotMatch(html, /IMPACT_CONTRACT/);
-  assert.match(html, />Filters in country<\/span>/);
-  assert.match(html, /potential reach<\/small>/);
+  assert.match(html, />Countries<\/span>/);
+  assert.match(html, />Total filters<\/span>/);
+  assert.match(html, />Total impact<\/span>/);
+  assert.doesNotMatch(html, /id="kFilters"|id="kPeople"|potential reach<\/small>/);
   assert.match(html, />Filters distributed<\/span>/);
+  assert.match(html, />Total filters in country<\/span>/);
   assert.match(html, />Est\. people reached<\/span>/);
   assert.match(html, /const PEOPLE_PER_FILTER=5/);
   assert.match(html, /const inventory=p\.potentialFilters==null\?p\.filters:Math\.max\(p\.filters,p\.potentialFilters\)/);
   assert.match(html, /inCountry\*PEOPLE_PER_FILTER/);
-  assert.match(html, /Actual impact · distributed/);
-  assert.match(html, /Potential impact · in country/);
+  assert.doesNotMatch(html, /Actual impact · distributed|Potential impact · in country/);
   assert.match(html, /Last updated/);
   assert.match(html, /updated: '—'/);
 });
@@ -56,11 +58,22 @@ test('country detail adds public region markers without household coordinates', 
   assert.match(html, /stroke:#8bf3f4/);
   assert.match(html, /COL:\{'Riohacha':\{lat:11\.538416,lon:-72\.916784\},'La Guajira':\{lat:11\.4255,lon:-72\.375\}\}/);
   assert.match(html, /VNM:\{'Dien Bien':\{lat:21\.40,lon:103\.02\},'Hanoi':\{lat:21\.0285,lon:105\.8542\},'Central Highlands':\{lat:13\.75,lon:108\.25\}\}/);
-  assert.match(html, /\.card\{width:100vw\}/);
+  assert.match(html, /\.card\{position:fixed;[^}]*width:min\(420px/s);
+  assert.match(html, /\.card\{top:auto!important;left:0!important;right:0;bottom:0;width:100%/);
   assert.match(html, /const metrics=`<div class="metrics">/);
-  assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Actual impact · distributed<\/span>/);
-  assert.match(html, /<b>\$\{fmt\(p\.potentialFilters\)\}<\/b><span>Potential impact · in country<\/span>/);
+  assert.match(html, /<b>\$\{fmt\(p\.filters\)\}<\/b><span>Filters distributed<\/span>/);
+  assert.match(html, /<b>\$\{fmt\(countryTotal\)\}<\/b><span>Total filters in country<\/span>/);
   assert.match(html, /<b>\$\{fmt\(p\.served\)\}<\/b><span>Est\. people reached<\/span>/);
+});
+
+test('country detail is contextual and every configured country CTA can render', () => {
+  assert.match(html, /role="dialog" aria-modal="false"/);
+  assert.match(html, /function positionCard\(country\)/);
+  assert.match(html, /if\(p\.ctaUrl\)actions\.push/);
+  assert.doesNotMatch(html, /if\(p\.status==='Lead'&&p\.ctaUrl\)/);
+  assert.match(html, /p\.status==='Lead'\?'start':'support'/);
+  assert.match(html, /\.action\.start\{background:#1976e8/);
+  assert.match(html, /\.action\.support\{/);
 });
 
 test('map navigation uses gentle wheel zoom and modest click focus', () => {
