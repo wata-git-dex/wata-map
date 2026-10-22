@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.0">
+<meta name="application-version" content="1.4.1">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,19 +29,19 @@
     background:radial-gradient(1200px 700px at 70% -10%, var(--glow-one) 0%, transparent 60%),
                radial-gradient(900px 600px at -5% 110%, var(--glow-two) 0%, transparent 55%), var(--ocean);
     transition:background .2s ease,color .2s ease}
-  .head{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;align-items:flex-start;
-    justify-content:space-between;gap:12px;padding:calc(16px + var(--safe-top)) calc(18px + var(--safe-right)) 16px calc(18px + var(--safe-left));pointer-events:none}
+  .head{position:absolute;top:0;left:0;right:0;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:start;gap:18px;padding:calc(16px + var(--safe-top)) calc(18px + var(--safe-right)) 16px calc(18px + var(--safe-left));pointer-events:none}
   .title{display:flex;flex-direction:column;line-height:1.05;pointer-events:auto}
   .title .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600}
   .title h1{margin:2px 0 0;font-size:clamp(18px,2.4vw,26px);font-weight:700;letter-spacing:-.01em}
-  .view-control{position:relative;margin-top:10px;width:max-content}
+  .view-control{position:relative;width:max-content;justify-self:end;pointer-events:auto}
   .view-trigger{min-height:44px;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:13px;
     background:var(--control);backdrop-filter:blur(8px);color:var(--ink);font:600 12px/1.2 var(--font);cursor:pointer;box-shadow:0 8px 26px rgba(0,0,0,.12)}
   .view-trigger:hover,.view-trigger:focus-visible{border-color:#59c2d6;outline:none}
   .view-trigger svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .view-trigger .chev{width:13px;height:13px;transition:transform .18s ease}.view-trigger[aria-expanded="true"] .chev{transform:rotate(180deg)}
   .view-label{color:var(--dim);font-weight:500}.view-label strong{color:var(--ink);font-weight:700}
-  .view-menu{position:absolute;top:calc(100% + 7px);left:0;width:260px;padding:7px;border:1px solid var(--line);border-radius:15px;
+  .view-menu{position:absolute;top:calc(100% + 7px);right:0;width:260px;padding:7px;border:1px solid var(--line);border-radius:15px;
     background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(16px);box-shadow:0 18px 46px rgba(0,0,0,.3);z-index:30}
   .view-menu[hidden]{display:none}.view-option{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:10px;
     background:transparent;color:var(--ink);font-family:var(--font);text-align:left;cursor:pointer}
@@ -50,10 +50,12 @@
   .view-swatch.stress-view{background:linear-gradient(135deg,#55b98b 0 28%,#edc84f 28% 55%,#ef8b43 55% 78%,#d54b4b 78%)}
   .view-swatch.gap-view{background:linear-gradient(135deg,#2DBE9E 0 20%,#6bc7bb 20% 40%,#edc84f 40% 60%,#ef8b43 60% 80%,#d54b4b 80%)}
   .view-option span:last-child{display:flex;flex-direction:column;gap:3px}.view-option b{font-size:13px}.view-option small{font-size:10px;color:var(--dim)}
-  .impact{pointer-events:auto;display:flex;justify-content:flex-end;align-items:stretch;gap:0;padding:5px;background:var(--control);
+  .impact{pointer-events:auto;display:flex;justify-self:center;align-items:stretch;gap:4px;padding:5px;background:var(--control);
     backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 26px rgba(0,0,0,.12)}
-  .kpi{padding:7px 13px;text-align:right;min-width:74px;transition:background .2s ease,border-color .2s ease}
-  .kpi+.kpi{border-left:1px solid var(--line)}
+  .kpi{--kpi-accent:#59C2D6;position:relative;overflow:hidden;padding:8px 13px;text-align:center;min-width:86px;border:1px solid color-mix(in srgb,var(--kpi-accent) 34%,var(--line));border-radius:10px;
+    background:color-mix(in srgb,var(--kpi-accent) 12%,transparent);transition:background .2s ease,border-color .2s ease}
+  .kpi:nth-child(2){--kpi-accent:#2DBE9E}.kpi:nth-child(3){--kpi-accent:#F5B841}
+  .kpi::before{content:"";position:absolute;left:9px;right:9px;top:0;height:2px;border-radius:0 0 3px 3px;background:var(--kpi-accent);opacity:.9}
   .kpi b{font-size:22px;display:block;line-height:1;font-variant-numeric:tabular-nums}
   .kpi span{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
   .theme-toggle{width:40px;height:40px;flex:0 0 40px;margin:0;border-radius:10px;border:1px solid transparent;background:transparent;
@@ -155,8 +157,9 @@
 
   @media (max-width:640px){
     .legend{left:calc(12px + var(--safe-left));bottom:calc(12px + var(--safe-bottom));padding:10px 12px;min-width:150px}
-    .zoom{right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom))} .head{padding:calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) 12px calc(12px + var(--safe-left));flex-direction:column;align-items:flex-start}
-    .impact{width:100%;justify-content:flex-start}
+    .zoom{right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom))} .head{grid-template-columns:minmax(0,1fr) auto;gap:10px 8px;padding:calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) 12px calc(12px + var(--safe-left))}
+    .title{grid-column:1;grid-row:1}.view-control{grid-column:2;grid-row:1}.view-trigger{padding-inline:10px}.view-label{font-size:0}.view-label strong{font-size:12px}
+    .impact{grid-column:1/-1;grid-row:2;width:100%;justify-content:center}
     .kpi{flex:1;min-width:0;padding:8px 9px;text-align:center}
     .kpi b{font-size:20px}
     .view-menu{position:fixed;top:auto;left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom));width:auto}
@@ -176,24 +179,23 @@
 <body>
 <div id="app">
   <div class="head">
-    <div class="title"><span class="eyebrow">Water Access To All</span><h1>Impact map</h1>
-      <div class="view-control" id="viewControl">
-        <button class="view-trigger" id="viewTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="viewMenu">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg>
-          <span class="view-label">View: <strong id="viewLabel">WATA Impact</strong></span>
-          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
-        </button>
-        <div class="view-menu" id="viewMenu" role="listbox" aria-label="Map view" hidden>
-          <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
-          <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
-          <button class="view-option" type="button" role="option" data-view="gap" aria-selected="false"><span class="view-swatch gap-view"></span><span><b>Safe Drinking Water Gap</b><small>Without safely managed service · WHO/UNICEF</small></span></button>
-        </div>
-      </div>
-    </div>
+    <div class="title"><span class="eyebrow">Water Access To All</span><h1>Impact map</h1></div>
     <div class="impact">
       <div class="kpi"><b id="kCountries">0</b><span>Countries</span></div>
       <div class="kpi"><b id="kInCountry">—</b><span>Total filters</span></div>
       <div class="kpi"><b id="kPotentialPeople">—</b><span>Total impact</span></div>
+    </div>
+    <div class="view-control" id="viewControl">
+      <button class="view-trigger" id="viewTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="viewMenu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg>
+        <span class="view-label">View: <strong id="viewLabel">WATA Impact</strong></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+      </button>
+      <div class="view-menu" id="viewMenu" role="listbox" aria-label="Map view" hidden>
+        <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
+        <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
+        <button class="view-option" type="button" role="option" data-view="gap" aria-selected="false"><span class="view-swatch gap-view"></span><span><b>Safe Drinking Water Gap</b><small>Without safely managed service · WHO/UNICEF</small></span></button>
+      </div>
     </div>
   </div>
 

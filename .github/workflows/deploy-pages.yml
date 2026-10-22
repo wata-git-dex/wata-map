@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - index.html
+      - impact-summary.html
       - assets/**
       - manifest.webmanifest
       - quick-map-bridge.js

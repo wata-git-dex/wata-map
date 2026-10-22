@@ -7,10 +7,11 @@ An interactive world map that colors countries by their WATA project **Stage** a
 
 ## Live locations
 - **Map (frontend):** `https://map.cleanwata.org/` — custom domain for repo `wata-git-dex/wata-map` (public), with the GitHub URL redirecting to it. `.github/workflows/deploy-pages.yml` explicitly deploys the static site on relevant pushes to `main`.
+- **Embeddable impact snapshot:** `https://map.cleanwata.org/impact-summary.html` — responsive public section for Wix that reads the same Worker response as the map. It is a separate section intended to sit above the map, not a map view or map control. It filters country stages and switches between distributed filters, known ready-to-distribute inventory, total filters in country and estimated people reached.
 - **Worker (data API):** `https://wata-map.cleanwataorg.workers.dev` — Cloudflare Worker named `wata-map`. Source is `worker.js`; `.github/workflows/deploy-worker.yml` deploys it on relevant pushes to `main`.
 - **Data sources:** Notion **Country Data** (`638d93f9-19bc-8305-a503-07a0b9eaba93`) plus **Deployments (1) / Events** (`c94d93f9-19bc-83b4-8112-87a824660fb4`), under DATA & DOCS.
 - **Notion access:** the Notion integration named **WATA MAP** must be connected to both data sources. Its token is stored as the Cloudflare secret `NOTION_TOKEN` (encrypted). The token is NOT in the repo or in index.html, and must never be.
-- **Wix:** embed via **Embed a Site** (iframe) pointing at `https://map.cleanwata.org/`.
+- **Wix:** embed the full map with **Embed a Site** pointing at `https://map.cleanwata.org/`. Use `https://map.cleanwata.org/impact-summary.html` for the live impact-number section.
 
 ## Data flow
 ```
@@ -78,7 +79,7 @@ All in `index.html` unless noted:
 - Cloudflare free tier: ~50 subrequests per request. Per-page number fetches are 2× active-with-trips countries; fine now, watch it past ~24 active countries.
 
 ## Known follow-ups (not yet done)
-- Embed on Wix (Embed a Site iframe; full width; height ~600 desktop / ~520 mobile).
+- Replace the older manually maintained Wix impact cards with the live `impact-summary.html` iframe. Start full width at roughly 700 px desktop height and 1,050 px phone height, then adjust to the rendered Wix breakpoint without cropping.
 - Optional `?only=ISO,ISO` URL filter so the Partner Portal can reuse this file for scoped per-partner maps.
 - Fill Map Narrative + Map Photos for each country.
 - Optional: Airtable→Notion Event sync so surveyed filter numbers self-update without making mWater, a Trip, or a formal Deployment mandatory for historical/manual Events.
@@ -129,6 +130,8 @@ All in `index.html` unless noted:
 
 ## Files
 - `index.html` — the map (live copy on Pages).
+- `impact-summary.html` — the responsive Wix-ready live impact section; one load request, no polling, shared Worker/cache path with the map.
+- `impact-summary.test.mjs` — source, semantics, controls, responsiveness and link checks for the impact section.
 - `worker.js` — Cloudflare Worker (deployed copy lives in Cloudflare).
 - `theme.test.mjs` — theme-control, persistence and inline-script tests.
 - `quick-map-bridge.js` — explicit-origin quick-map iframe handshake and Escape bridge.

@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.0"/);
+  assert.match(html, /name="application-version" content="1\.4\.1"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -126,13 +126,20 @@ test('safe drinking water gap is a sourced, distinct view with honest missing da
 });
 
 test('map controls and headline statistics use compact grouped callouts', () => {
+  assert.match(html, /\.head\{[^}]*display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/s);
   assert.match(html, /\.impact\{[^}]*padding:5px[^}]*background:var\(--control\)[^}]*border:1px solid var\(--line\)/s);
-  assert.match(html, /\.kpi\+\.kpi\{border-left:1px solid var\(--line\)\}/);
+  assert.match(html, /\.impact\{[^}]*justify-self:center/s);
+  assert.match(html, /\.view-control\{[^}]*justify-self:end/s);
+  assert.match(html, /\.kpi:nth-child\(2\)\{--kpi-accent:#2DBE9E\}/);
+  assert.match(html, /\.kpi:nth-child\(3\)\{--kpi-accent:#F5B841\}/);
   assert.match(html, /\.zoom\{[^}]*gap:3px[^}]*padding:5px[^}]*background:var\(--control\)/s);
   assert.match(html, /\.zoom \.rst\{width:40px;padding:0\}/);
   assert.match(html, /<button id="rst" class="rst" aria-label="Reset view" title="Reset view"><svg/);
   assert.match(html, /<div class="zoom">\s*<button class="theme-toggle" id="themeToggle"/);
-  const impactMarkup = html.match(/<div class="impact">([\s\S]*?)<\/div>\s*<\/div>\s*<div id="wrap">/)?.[1] || '';
+  const headerMarkup = html.match(/<div class="head">([\s\S]*?)<\/div>\s*<div id="wrap">/)?.[1] || '';
+  assert.ok(headerMarkup.indexOf('class="title"') < headerMarkup.indexOf('class="impact"'));
+  assert.ok(headerMarkup.indexOf('class="impact"') < headerMarkup.indexOf('class="view-control"'));
+  const impactMarkup = html.match(/<div class="impact">([\s\S]*?)<\/div>\s*<div class="view-control"/)?.[1] || '';
   assert.doesNotMatch(impactMarkup, /themeToggle/);
 });
 
