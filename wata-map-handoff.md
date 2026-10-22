@@ -7,7 +7,7 @@ An interactive world map that colors countries by their WATA project **Stage** a
 
 ## Live locations
 - **Map (frontend):** `https://map.cleanwata.org/` — custom domain for repo `wata-git-dex/wata-map` (public), with the GitHub URL redirecting to it. `.github/workflows/deploy-pages.yml` explicitly deploys the static site on relevant pushes to `main`.
-- **Embeddable impact-stat bar:** `https://map.cleanwata.org/impact-summary.html` — three responsive Wix cards only, intended to replace the older manual Filters / People / Countries cards above the map. Filters and People share a synchronized Total / Distributed / Ready selection; Countries switches independently among Impact / Active / Pilots / Leads. It reads the same Worker response as the map but is not a map view or map control.
+- **Embeddable impact-stat bar:** `https://map.cleanwata.org/impact-summary.html` — three responsive Wix cards only, intended to replace the older manual Filters / People / Countries cards above the map. Filters and People share a synchronized Total / Distributed / Pending selection; Total equals distributed plus reported pending inventory, and People is shown as an estimated `+` reach. Countries switches independently among Impact / Active / Pilots / Leads. It reads the same Worker response as the map but is not a map view or map control.
 - **Worker (data API):** `https://wata-map.cleanwataorg.workers.dev` — Cloudflare Worker named `wata-map`. Source is `worker.js`; `.github/workflows/deploy-worker.yml` deploys it on relevant pushes to `main`.
 - **Data sources:** Notion **Country Data** (`638d93f9-19bc-8305-a503-07a0b9eaba93`) plus **Deployments (1) / Events** (`c94d93f9-19bc-83b4-8112-87a824660fb4`), under DATA & DOCS.
 - **Notion access:** the Notion integration named **WATA MAP** must be connected to both data sources. Its token is stored as the Cloudflare secret `NOTION_TOKEN` (encrypted). The token is NOT in the repo or in index.html, and must never be.
@@ -127,6 +127,14 @@ All in `index.html` unless noted:
 - One row represents one public area and provides Location, Country, Latitude, Longitude, Area Type, Map Status, Coordinate Source, Public Note and Last Reviewed. The database description explicitly prohibits household coordinates.
 - Its two-way Country relation added **Map Locations** to Country Data. The entry view is **Enter & review locations** and shows the complete review workflow.
 - This data source is deliberately not read by the Worker or frontend yet. Existing `Regions` and reviewed frontend coordinates remain authoritative until Cyrus marks entries ready, reviews the dataset and explicitly approves the cutover. The future reader should include only `Approved for map` rows with valid Country, latitude, longitude and public label; malformed or incomplete rows must be excluded rather than guessed.
+
+## Impact-stat embed and page-scroll release — 2026-10-22
+- The approved impact-stat embed is a standalone three-card bar at `impact-summary.html`, not a replacement for the map. Filters and People remain synchronized across **Total / Distributed / Pending**; Countries switches independently across **Impact / Active / Pilots / Leads**.
+- Total is the sum of reported distributed filters and reported pending in-country inventory. Pending is shown only where Country Data provides an inventory total; the card discloses current inventory coverage instead of inventing missing pending counts. People values are estimates at five people per selected filter and display a trailing `+`.
+- The cards use WATA-colored pill controls, title-case labels and water-drop / people / globe badges. Desktop and phone layouts were visually checked without horizontal overflow.
+- Map version `1.4.2` no longer intercepts mouse-wheel or trackpad scrolling. Zoom remains available from the `+` / `−` controls, country selection and direct touch gestures, preventing an embedded map from hijacking normal Wix page scrolling.
+- The embed makes one Worker request on load and only another when the user presses Refresh; it has no polling. This release changes no Worker, Notion, Airtable, mWater or Registry data.
+- Source validation before release: 45 automated tests passed, including inline JavaScript, impact semantics, responsive structure, source behavior, map navigation, quick-map origin rules and Worker lifecycle logic. Browser checks confirmed synchronized modes, desktop/mobile fit, non-cancelled wheel events, control zoom and country-focus zoom.
 
 ## Files
 - `index.html` — the map (live copy on Pages).

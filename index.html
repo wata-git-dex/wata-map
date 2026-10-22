@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.1">
+<meta name="application-version" content="1.4.2">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -630,7 +630,6 @@ function animateVB(target){stopVBAnimation();target=constrained(target);if(reduc
     if(t<1)vbAnimation=requestAnimationFrame(step);else vbAnimation=0;};vbAnimation=requestAnimationFrame(step);}
 function focusCountry(el){let box;try{box=el.getBBox();}catch{return;}const w=Math.min(vb.w,BASE.w*.78),h=w*(BASE.h/BASE.w);
   animateVB({x:box.x+box.width/2-w/2,y:box.y+box.height/2-h/2,w,h});}
-svg.addEventListener('wheel',e=>{e.preventDefault();stopVBAnimation();const delta=Math.max(-50,Math.min(50,e.deltaY));zoomAt(e.clientX,e.clientY,Math.exp(delta*.0014));},{passive:false});
 document.getElementById('zin').onclick=()=>{stopVBAnimation();const r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,0.75);};
 document.getElementById('zout').onclick=()=>{stopVBAnimation();const r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,1.33);};
 document.getElementById('rst').onclick=()=>{stopVBAnimation();vb={...BASE};applyVB();};

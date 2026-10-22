@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.1"/);
+  assert.match(html, /name="application-version" content="1\.4\.2"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -143,8 +143,10 @@ test('map controls and headline statistics use compact grouped callouts', () => 
   assert.doesNotMatch(impactMarkup, /themeToggle/);
 });
 
-test('map navigation uses gentle wheel zoom and modest click focus', () => {
-  assert.match(html, /Math\.exp\(delta\*\.0014\)/);
+test('map navigation leaves page scrolling alone while controls and country clicks zoom', () => {
+  assert.doesNotMatch(html, /addEventListener\('wheel'|onwheel|Math\.exp\(delta/);
+  assert.match(html, /document\.getElementById\('zin'\)\.onclick/);
+  assert.match(html, /document\.getElementById\('zout'\)\.onclick/);
   assert.match(html, /function focusCountry\(/);
   assert.match(html, /BASE\.w\*\.78/);
   assert.match(html, /focusCountry\(t\)/);
