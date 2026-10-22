@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
 const waterStress = await readFile(new URL('./water-stress-data.js', import.meta.url), 'utf8');
+const drinkingWater = await readFile(new URL('./drinking-water-data.js', import.meta.url), 'utf8');
 
 test('all inline scripts are valid JavaScript', () => {
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
@@ -25,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.2\.0"/);
+  assert.match(html, /name="application-version" content="1\.3\.0"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -99,9 +100,31 @@ test('map views expose sourced Aqueduct water stress without replacing WATA impa
   assert.doesNotMatch(waterStress, /-9999/);
 });
 
-test('reset control is wide enough for its visible label', () => {
-  assert.match(html, /\.zoom \.rst\{width:56px;padding:0 7px;font-size:10px;letter-spacing:\.04em\}/);
-  assert.match(html, /<button id="rst" class="rst" aria-label="Reset view">RESET<\/button>/);
+test('drinking water access is a sourced, distinct view with honest missing data', () => {
+  const context = { window: {} };
+  vm.runInNewContext(drinkingWater, context);
+  const layer = context.window.WATA_DRINKING_WATER;
+  assert.equal(Object.keys(layer.countries).length, 214);
+  assert.equal(layer.indicator, 'SH.H2O.BASW.ZS');
+  assert.equal(layer.source, 'WHO/UNICEF Joint Monitoring Programme (JMP)');
+  assert.deepEqual(Array.from(layer.countries.COL), [97.1, 2024]);
+  assert.deepEqual(Array.from(layer.countries.COD), [35.7, 2024]);
+  assert.equal(layer.countries.NIC, undefined);
+  assert.equal(layer.countries.WLD, undefined);
+  assert.match(html, /data-view="access" aria-selected="false"/);
+  assert.match(html, /Drinking Water Access/);
+  assert.match(html, /currentView==='access'/);
+  assert.match(html, /missing data stays neutral/);
+  assert.match(html, /this is not the same as a safely managed or laboratory-confirmed potable supply/);
+  assert.match(html, /drinking-water-data\.js\?v=2024-20261008/);
+});
+
+test('map controls and headline statistics use compact grouped callouts', () => {
+  assert.match(html, /\.impact\{[^}]*padding:5px[^}]*background:var\(--control\)[^}]*border:1px solid var\(--line\)/s);
+  assert.match(html, /\.kpi\+\.kpi\{border-left:1px solid var\(--line\)\}/);
+  assert.match(html, /\.zoom\{[^}]*gap:3px[^}]*padding:5px[^}]*background:var\(--control\)/s);
+  assert.match(html, /\.zoom \.rst\{width:40px;padding:0\}/);
+  assert.match(html, /<button id="rst" class="rst" aria-label="Reset view" title="Reset view"><svg/);
 });
 
 test('map navigation uses gentle wheel zoom and modest click focus', () => {
