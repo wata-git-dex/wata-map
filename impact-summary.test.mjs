@@ -13,9 +13,10 @@ test('compact impact bar inline script is valid JavaScript',()=>{
 
 test('compact impact bar reads the same cached live source once',()=>{
   assert.match(html,/https:\/\/wata-map\.cleanwataorg\.workers\.dev/);
-  assert.match(html,/fetch\(DATA_URL,\{cache:'no-store'\}\)/);
+  assert.match(html,/fetch\(DATA_URL,\{cache:'no-store',signal:AbortSignal\.timeout\(LIVE_REQUEST_TIMEOUT_MS\)\}\)/);
   assert.equal((html.match(/fetch\(/g)||[]).length,1);
   assert.doesNotMatch(html,/setInterval|setTimeout/);
+  assert.match(html,/const LIVE_REQUEST_TIMEOUT_MS=12000/);
 });
 
 test('filter and people controls share one synchronized impact mode',()=>{

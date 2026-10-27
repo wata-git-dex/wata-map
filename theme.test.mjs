@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.3"/);
+  assert.match(html, /name="application-version" content="1\.4\.4"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -187,4 +187,12 @@ test('iframe mode is marked before layout so host and map do not double-inset', 
     window: { self, top },
   });
   assert.equal(dataset.embedded, 'true');
+});
+
+test('live data startup and refresh are bounded without polling or session checks', () => {
+  assert.match(html, /const LIVE_REQUEST_TIMEOUT_MS = 12000/);
+  assert.match(html, /fetch\(WORKER_URL,\{signal:AbortSignal\.timeout\(LIVE_REQUEST_TIMEOUT_MS\)\}\)/);
+  assert.match(html, /DATA\.updated='Live data unavailable'/);
+  assert.match(html, /DATA\.dataStatus='stale'/);
+  assert.doesNotMatch(html, /setInterval|visibilitychange|\/session|\/auth/);
 });

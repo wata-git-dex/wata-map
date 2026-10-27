@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.3">
+<meta name="application-version" content="1.4.4">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -423,6 +423,7 @@
    Empty = shows the baked data below. Set = pulls live from Notion.
    ========================================================================= */
 const WORKER_URL = 'https://wata-map.cleanwataorg.workers.dev'; // live
+const LIVE_REQUEST_TIMEOUT_MS = 12000;
 
 /* =========================================================================
    STAGES — these match your Notion "Stage" exactly. Order here = legend order.
@@ -737,7 +738,7 @@ async function refresh(silent){
   if(!WORKER_URL){if(!silent)toast('Add your Worker URL to go live');return;}
   if(btn.classList.contains('spin'))return;btn.classList.add('spin');if(!silent)toast('Pulling from Notion…');
   try{
-    const res=await fetch(WORKER_URL);if(!res.ok)throw new Error('Worker '+res.status);
+    const res=await fetch(WORKER_URL,{signal:AbortSignal.timeout(LIVE_REQUEST_TIMEOUT_MS)});if(!res.ok)throw new Error('Worker '+res.status);
     const j=await res.json();if(j.error)throw new Error(j.error);
     if(j.countries)DATA.countries=j.countries;
     if(j.updated)DATA.updated=j.updated;
@@ -747,7 +748,11 @@ async function refresh(silent){
     paint();renderLegendAndKPIs();
     if(DATA.dataStatus==='stale')toast('Source unavailable · showing last saved data');
     else if(!silent)toast('Updated');
-  }catch(err){if(!silent)toast(err.message);}
+  }catch(err){
+    if(DATA.updated==='—')DATA.updated='Live data unavailable';else DATA.dataStatus='stale';
+    renderLegendAndKPIs();
+    if(!silent)toast(err.name==='TimeoutError'?'Refresh timed out · try again':err.message);
+  }
   finally{btn.classList.remove('spin');}
 }
 document.getElementById('refreshBtn').onclick=()=>refresh(false);
