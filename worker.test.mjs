@@ -16,6 +16,7 @@ function country({
   ctaLabel = "",
   ctaUrl = null,
   totalFilters,
+  incompleteTotalFilters = false,
   legacyInCountry,
   distributedCountry,
 } = {}) {
@@ -30,7 +31,9 @@ function country({
       "Country Page URL": { url: countryUrl },
       "Map CTA Label": { rich_text: ctaLabel ? [{ plain_text: ctaLabel }] : [] },
       "Map CTA URL": { url: ctaUrl },
-      ...(totalFilters === undefined ? {} : { "Filters (Total)": { rollup: { type: "number", number: totalFilters } } }),
+      ...(incompleteTotalFilters
+        ? { "Filters (Total)": { id: "filters-total-property", rollup: { type: "incomplete", incomplete: {} } } }
+        : totalFilters === undefined ? {} : { "Filters (Total)": { rollup: { type: "number", number: totalFilters } } }),
       ...(legacyInCountry === undefined ? {} : { "Reported Filters in Country": { number: legacyInCountry } }),
       ...(distributedCountry === undefined ? {} : { "Reported Distributed Filters": { number: distributedCountry } }),
       Regions: { multi_select: [] },
@@ -82,7 +85,7 @@ function event({
   return { id, last_edited_time: edited, properties };
 }
 
-function installFetch(t, { countries, events, failEvents = false }) {
+function installFetch(t, { countries, events, failEvents = false, propertyTotals = {} }) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input) => {
     const url = String(input);
@@ -92,6 +95,18 @@ function installFetch(t, { countries, events, failEvents = false }) {
     if (url.includes(`${EVENT_SOURCE}/query`)) {
       if (failEvents) return new Response("source unavailable", { status: 503 });
       return Response.json({ results: events, has_more: false });
+    }
+    const propertyMatch = url.match(/\/v1\/pages\/([^/]+)\/properties\/filters-total-property/);
+    if (propertyMatch) {
+      const pageId = decodeURIComponent(propertyMatch[1]);
+      if (!(pageId in propertyTotals)) return new Response("property unavailable", { status: 404 });
+      return Response.json({
+        object: "list",
+        results: [],
+        has_more: false,
+        next_cursor: null,
+        property_item: { type: "rollup", rollup: { type: "number", number: propertyTotals[pageId], function: "sum" } },
+      });
     }
     return new Response("not found", { status: 404 });
   };
@@ -140,6 +155,18 @@ test("uses Filters (Total) instead of the older manual country total", async (t)
   const { payload } = await readPayload();
   assert.equal(payload.countries.GTM.potentialFilters, 217);
   assert.equal(payload.countries.GTM.metrics.reportedInCountry.filters, 217);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.peoplePotentialEstimate, 1085);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.source, "notion-country-data-filters-total");
+});
+
+test("resolves an incomplete Filters (Total) rollup through the property endpoint", async (t) => {
+  installFetch(t, {
+    countries: [country({ incompleteTotalFilters: true, legacyInCountry: 150 })],
+    events: [],
+    propertyTotals: { [guatemalaId]: 217 },
+  });
+  const { payload } = await readPayload();
+  assert.equal(payload.countries.GTM.potentialFilters, 217);
   assert.equal(payload.countries.GTM.metrics.reportedInCountry.peoplePotentialEstimate, 1085);
   assert.equal(payload.countries.GTM.metrics.reportedInCountry.source, "notion-country-data-filters-total");
 });

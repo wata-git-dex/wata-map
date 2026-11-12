@@ -16,7 +16,7 @@ const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployme
 const EVENT_LEGACY_DATABASE_ID = "381d93f9-19bc-80ae-879e-fb4338d3aec3"; // Filter Events database block (legacy API route)
 const NOTION_VERSION = "2026-03-11";
 const LEGACY_NOTION_VERSION = "2022-06-28";
-const CACHE_VERSION = "2026-11-12-country-filters-total-v3";
+const CACHE_VERSION = "2026-11-12-country-filters-total-v4";
 const METRIC_CONTRACT = "actual-and-potential-impact-v2";
 const PEOPLE_PER_FILTER = 5;
 
@@ -96,10 +96,21 @@ export default {
         sourceFreshness = newestTimestamp(sourceFreshness, metadataFreshness);
 
         const reportedDistributed = anyNumber(p, PROP.distributed);
+        let totalFilters = anyNumber(p, PROP.totalFilters);
+        const totalFiltersProperty = prop(p, PROP.totalFilters);
+        // Notion can return calculated rollups as `incomplete` in a data-source
+        // query. Its supported property-item endpoint resolves the final sum.
+        if (totalFilters == null && totalFiltersProperty?.rollup && totalFiltersProperty?.id && p.id) {
+          try {
+            totalFilters = await retrieveRollupNumber(p.id, totalFiltersProperty.id, env.NOTION_TOKEN);
+          } catch (rollupError) {
+            console.warn(`Could not resolve ${PROP.totalFilters} for ${name}`, rollupError?.message || rollupError);
+          }
+        }
         const country = countries[iso] = {
           status:  stage,           // raw Notion Stage name — legend matches Notion
           filters: reportedDistributed, // compatibility alias: actual distributed filters
-          potentialFilters: anyNumber(p, PROP.totalFilters), // canonical total used by Total Filters and estimated total reach
+          potentialFilters: totalFilters, // canonical total used by Total Filters and estimated total reach
           served:  reportedDistributed == null ? null : reportedDistributed * PEOPLE_PER_FILTER,
           note:    text(p, PROP.notes),
           photos:  urls(text(p, PROP.photos)),
@@ -398,6 +409,48 @@ async function queryAll(dsId, token, legacyDatabaseId = dsId) {
     }
   } while (cursor);
   return out;
+}
+
+async function retrieveRollupNumber(pageId, propertyId, token) {
+  let cursor;
+  let pages = 0;
+  let resolved = null;
+  do {
+    if (++pages > 100) throw new Error("Too many Notion rollup pages");
+    const url = new URL(`https://api.notion.com/v1/pages/${encodeURIComponent(pageId)}/properties/${encodeURIComponent(propertyId)}`);
+    url.searchParams.set("page_size", "100");
+    if (cursor) url.searchParams.set("start_cursor", cursor);
+
+    const r = await fetchNotionProperty(url, token);
+    if (!r.ok) throw new Error(`Notion property ${r.status}: ${(await r.text()).slice(0, 200)}`);
+    const j = await r.json();
+    const aggregate = j?.property_item?.rollup || j?.rollup;
+    const value = rollupVal(aggregate);
+    if (value != null) resolved = value;
+
+    if (!j?.has_more) return resolved;
+    if (typeof j.next_cursor !== "string" || !j.next_cursor.trim() || j.next_cursor === cursor) {
+      throw new Error("Invalid or repeated Notion property cursor");
+    }
+    cursor = j.next_cursor;
+  } while (cursor);
+  return resolved;
+}
+
+async function fetchNotionProperty(url, token) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const r = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Notion-Version": NOTION_VERSION,
+      },
+    });
+    if (r.status !== 429 || attempt === 2) return r;
+    const retryAfter = Number(r.headers.get("Retry-After"));
+    const delayMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 350 * (attempt + 1);
+    await new Promise((resolve) => setTimeout(resolve, Math.min(delayMs, 5000)));
+  }
+  throw new Error("Notion property request failed");
 }
 
 function prop(p, n)   { return (p.properties && p.properties[n]) || null; }
