@@ -15,7 +15,8 @@ function country({
   countryUrl = null,
   ctaLabel = "",
   ctaUrl = null,
-  inCountry,
+  totalFilters,
+  legacyInCountry,
   distributedCountry,
 } = {}) {
   return {
@@ -29,7 +30,8 @@ function country({
       "Country Page URL": { url: countryUrl },
       "Map CTA Label": { rich_text: ctaLabel ? [{ plain_text: ctaLabel }] : [] },
       "Map CTA URL": { url: ctaUrl },
-      ...(inCountry === undefined ? {} : { "Reported Filters in Country": { number: inCountry } }),
+      ...(totalFilters === undefined ? {} : { "Filters (Total)": { rollup: { type: "number", number: totalFilters } } }),
+      ...(legacyInCountry === undefined ? {} : { "Reported Filters in Country": { number: legacyInCountry } }),
       ...(distributedCountry === undefined ? {} : { "Reported Distributed Filters": { number: distributedCountry } }),
       Regions: { multi_select: [] },
     },
@@ -106,7 +108,7 @@ async function readPayload() {
 }
 
 test("counts a country-linked distribution without a Trip or Deployment", async (t) => {
-  installFetch(t, { countries: [country({ inCountry: 53 })], events: [event({ distributed: 39, droppedOff: 14 })] });
+  installFetch(t, { countries: [country({ totalFilters: 53 })], events: [event({ distributed: 39, droppedOff: 14 })] });
   const { response, payload } = await readPayload();
   assert.equal(response.status, 200);
   assert.equal(payload.countries.GTM.filters, 39);
@@ -120,7 +122,7 @@ test("counts a country-linked distribution without a Trip or Deployment", async 
 
 test("keeps actual impact separate from total filters in country", async (t) => {
   installFetch(t, {
-    countries: [country({ inCountry: 478 })],
+    countries: [country({ totalFilters: 478 })],
     events: [event({ distributed: 464, droppedOff: 14 })],
   });
   const { payload } = await readPayload();
@@ -128,6 +130,18 @@ test("keeps actual impact separate from total filters in country", async (t) => 
   assert.equal(payload.countries.GTM.served, 2320);
   assert.equal(payload.countries.GTM.potentialFilters, 478);
   assert.equal(payload.countries.GTM.metrics.reportedInCountry.peoplePotentialEstimate, 2390);
+});
+
+test("uses Filters (Total) instead of the older manual country total", async (t) => {
+  installFetch(t, {
+    countries: [country({ totalFilters: 217, legacyInCountry: 150 })],
+    events: [event({ distributed: 151, droppedOff: 66 })],
+  });
+  const { payload } = await readPayload();
+  assert.equal(payload.countries.GTM.potentialFilters, 217);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.filters, 217);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.peoplePotentialEstimate, 1085);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.source, "notion-country-data-filters-total");
 });
 
 test("does not use static or Country Data totals when no qualifying distribution exists", async (t) => {
@@ -267,7 +281,7 @@ test("reports source freshness from contributing Notion records, separately from
 });
 
 test("uses the owner-maintained Country Data distribution total when Events cannot be read", async (t) => {
-  installFetch(t, { countries: [country({ inCountry: 478, distributedCountry: 464 })], events: [], failEvents: true });
+  installFetch(t, { countries: [country({ totalFilters: 478, distributedCountry: 464 })], events: [], failEvents: true });
   const { response, payload } = await readPayload();
   assert.equal(response.status, 200);
   assert.equal(payload.dataStatus, "current");
@@ -288,7 +302,7 @@ test("falls back to Notion's legacy database query route on endpoint compatibili
     }
     if (url.includes(`/databases/${COUNTRY_SOURCE}/query`)) {
       assert.equal(init.headers["Notion-Version"], "2022-06-28");
-      return Response.json({ results: [country({ inCountry: 478 })], has_more: false });
+      return Response.json({ results: [country({ totalFilters: 478 })], has_more: false });
     }
     if (url.includes(`/databases/${EVENT_LEGACY_DATABASE}/query`)) {
       assert.equal(init.headers["Notion-Version"], "2022-06-28");

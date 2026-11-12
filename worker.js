@@ -16,7 +16,7 @@ const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployme
 const EVENT_LEGACY_DATABASE_ID = "381d93f9-19bc-80ae-879e-fb4338d3aec3"; // Filter Events database block (legacy API route)
 const NOTION_VERSION = "2026-03-11";
 const LEGACY_NOTION_VERSION = "2022-06-28";
-const CACHE_VERSION = "2026-10-22-impact-potential-v2";
+const CACHE_VERSION = "2026-11-12-country-filters-total-v3";
 const METRIC_CONTRACT = "actual-and-potential-impact-v2";
 const PEOPLE_PER_FILTER = 5;
 
@@ -31,7 +31,7 @@ const PROP = {
   countryUrl: "Country Page URL", // OPTIONAL public country/story page.
   ctaLabel:  "Map CTA Label",     // OPTIONAL public action label, primarily for Lead countries.
   ctaUrl:    "Map CTA URL",       // OPTIONAL public action destination.
-  inCountry: "Reported Filters in Country", // Owner-confirmed inventory in country, distributed or awaiting distribution.
+  totalFilters: "Filters (Total)", // Country Data rollup of all related Event filters: distributed plus pending/drop-off.
   distributed: "Reported Distributed Filters", // Owner-maintained actual distribution total used when Events cannot be read.
 };
 
@@ -99,7 +99,7 @@ export default {
         const country = countries[iso] = {
           status:  stage,           // raw Notion Stage name — legend matches Notion
           filters: reportedDistributed, // compatibility alias: actual distributed filters
-          potentialFilters: anyNumber(p, PROP.inCountry), // filters physically in country; potential reach, not actual distribution
+          potentialFilters: anyNumber(p, PROP.totalFilters), // canonical total used by Total Filters and estimated total reach
           served:  reportedDistributed == null ? null : reportedDistributed * PEOPLE_PER_FILTER,
           note:    text(p, PROP.notes),
           photos:  urls(text(p, PROP.photos)),
@@ -113,8 +113,8 @@ export default {
         country.metrics.reportedInCountry = {
           filters: country.potentialFilters,
           peoplePotentialEstimate: country.potentialFilters == null ? null : country.potentialFilters * PEOPLE_PER_FILTER,
-          definition: "Owner-confirmed filters physically in country, including distributed filters and filters awaiting distribution; shown as potential impact.",
-          source: "notion-country-data",
+          definition: "Country Data Filters (Total) rollup: distributed filters plus filters pending distribution; used for estimated total reach.",
+          source: "notion-country-data-filters-total",
           sourceFreshness: metadataFreshness,
         };
         country.metrics.reportedDistributed = {
@@ -312,8 +312,8 @@ function emptyImpactMetrics() {
     reportedInCountry: {
       filters: null,
       peoplePotentialEstimate: null,
-      definition: "Owner-confirmed filters physically in country, including distributed filters and filters awaiting distribution; shown as potential impact.",
-      source: "notion-country-data",
+      definition: "Country Data Filters (Total) rollup: distributed filters plus filters pending distribution; used for estimated total reach.",
+      source: "notion-country-data-filters-total",
       sourceFreshness: null,
     },
     reportedDistributed: {

@@ -7,7 +7,7 @@ An interactive world map that colors countries by their WATA project **Stage** a
 
 ## Live locations
 - **Map (frontend):** `https://map.cleanwata.org/` — custom domain for repo `wata-git-dex/wata-map` (public), with the GitHub URL redirecting to it. `.github/workflows/deploy-pages.yml` explicitly deploys the static site on relevant pushes to `main`.
-- **Embeddable impact-stat bar:** `https://map.cleanwata.org/impact-summary.html` — three responsive Wix cards only, intended to replace the older manual Filters / People / Countries cards above the map. Filters and People share a synchronized Total / Distributed / Pending selection; Total equals distributed plus reported pending inventory, and People is shown as an estimated `+` reach. Countries switches independently among Impact / Active / Pilots / Leads. It reads the same Worker response as the map but is not a map view or map control.
+- **Embeddable impact-stat bar:** `https://map.cleanwata.org/impact-summary.html` — three responsive Wix cards only, intended to replace the older manual Filters / People / Countries cards above the map. Filters and People share a synchronized Total / Distributed / Pending selection; Total comes from Country Data `Filters (Total)`, and People is shown as an estimated `+` reach. Countries switches independently among Impact / Active / Pilots / Leads. It reads the same Worker response as the map but is not a map view or map control.
 - **Worker (data API):** `https://wata-map.cleanwataorg.workers.dev` — Cloudflare Worker named `wata-map`. Source is `worker.js`; `.github/workflows/deploy-worker.yml` deploys it on relevant pushes to `main`.
 - **Data sources:** Notion **Country Data** (`638d93f9-19bc-8305-a503-07a0b9eaba93`) plus **Deployments (1) / Events** (`c94d93f9-19bc-83b4-8112-87a824660fb4`), under DATA & DOCS.
 - **Notion access:** the Notion integration named **WATA MAP** must be connected to both data sources. Its token is stored as the Cloudflare secret `NOTION_TOKEN` (encrypted). The token is NOT in the repo or in index.html, and must never be.
@@ -27,6 +27,9 @@ The map fetches the Worker on load and on the Refresh button. There is NO 6-hour
 |---|---|---|
 | Name | Title | Country name → matched to a map shape via ISO-3 |
 | Stage | Status | Map color + legend. Values: Active, Pilot, Lead, Not started, Done, Paused. Blank = not painted. |
+| Filters (Total) | Rollup | Canonical total-filter source for the map and impact-summary Total/Pending modes; estimated total reach is this value × 5 |
+| Reported Filters in Country | Number | Superseded manual field; retained in Notion history but no longer read by the map |
+| Reported Distributed Filters | Number | Fallback distributed total only when Events cannot be read |
 | Total Filters (Dropped Off + Distributed) | Rollup | Legacy field; not a numerical fallback in the prepared reported-distributed contract |
 | Total People | Formula | Legacy field; not a numerical fallback in the prepared reported-distributed contract |
 | Map Narrative | Text | Public story in the popup (internal "Notes" is deliberately NOT read) |
@@ -130,7 +133,13 @@ All in `index.html` unless noted:
 
 ## Impact-stat embed and page-scroll release — 2026-10-22
 - The approved impact-stat embed is a standalone three-card bar at `impact-summary.html`, not a replacement for the map. Filters and People remain synchronized across **Total / Distributed / Pending**; Countries switches independently across **Impact / Active / Pilots / Leads**.
-- Total is the sum of reported distributed filters and reported pending in-country inventory. Pending is shown only where Country Data provides an inventory total; the card discloses current inventory coverage instead of inventing missing pending counts. People values are estimates at five people per selected filter and display a trailing `+`.
+- Total comes directly from Country Data `Filters (Total)`. Pending is `Filters (Total)` minus distributed filters, never below zero; the card discloses current total-field coverage instead of inventing missing pending counts. People values are estimates at five people per selected filter and display a trailing `+`.
+
+## Country Filters (Total) cutover — prepared 2026-11-12
+- The Worker now reads Country Data `Filters (Total)` as the canonical total-filter value instead of the older manual `Reported Filters in Country` column. The map headline, each country’s total-filter metric, the impact-summary Total mode and all estimated total-reach values use this rollup.
+- Distributed impact remains separate and continues to come from qualifying Notion Events, with `Reported Distributed Filters` retained only as the existing failure fallback. Pending remains the non-negative difference between the new total and distributed values.
+- Cache namespace `2026-11-12-country-filters-total-v3` prevents the prior five-minute payload from masking the field cutover. The Worker response shape and `actual-and-potential-impact-v2` contract remain compatible with both frontends.
+- The impact-summary copy/version becomes `1.3.4`; the full map remains `1.4.4` because its rendering code is unchanged.
 - The cards use WATA-colored pill controls, title-case labels and water-drop / people / globe badges. Desktop and phone layouts were visually checked without horizontal overflow.
 - Map version `1.4.2` no longer intercepts mouse-wheel or trackpad scrolling. Zoom remains available from the `+` / `−` controls, country selection and direct touch gestures, preventing an embedded map from hijacking normal Wix page scrolling.
 - The embed makes one Worker request on load and only another when the user presses Refresh; it has no polling. This release changes no Worker, Notion, Airtable, mWater or Registry data.

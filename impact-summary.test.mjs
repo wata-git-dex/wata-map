@@ -25,7 +25,8 @@ test('filter and people controls share one synchronized impact mode',()=>{
   assert.match(html,/document\.querySelectorAll\('\[data-impact\]'\)/);
   assert.match(html,/\$\('peopleValue'\)\.textContent=`\$\{fmt\(filters\*5\)\}\+`/);
   assert.match(html,/Reported filters in country that have not yet been distributed/);
-  assert.match(html,/\$\{totals\.inventoryCoverage\} of \$\{totals\.countryCount\} impact countries currently report inventory totals/);
+  assert.match(html,/Country Data total from related filter events/);
+  assert.match(html,/\$\{totals\.inventoryCoverage\} of \$\{totals\.countryCount\} impact countries currently provide Filters \(Total\)/);
 });
 
 test('countries switch independently among impact stages',()=>{
