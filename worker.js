@@ -16,7 +16,7 @@ const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployme
 const EVENT_LEGACY_DATABASE_ID = "381d93f9-19bc-80ae-879e-fb4338d3aec3"; // Filter Events database block (legacy API route)
 const NOTION_VERSION = "2026-03-11";
 const LEGACY_NOTION_VERSION = "2022-06-28";
-const CACHE_VERSION = "2026-11-12-country-filters-total-v4";
+const CACHE_VERSION = "2026-11-12-country-filters-total-v5";
 const METRIC_CONTRACT = "actual-and-potential-impact-v2";
 const PEOPLE_PER_FILTER = 5;
 
@@ -32,6 +32,7 @@ const PROP = {
   ctaLabel:  "Map CTA Label",     // OPTIONAL public action label, primarily for Lead countries.
   ctaUrl:    "Map CTA URL",       // OPTIONAL public action destination.
   totalFilters: "Filters (Total)", // Country Data rollup of all related Event filters: distributed plus pending/drop-off.
+  legacyTotalFilters: "Reported Filters in Country", // Temporary safety fallback when Notion withholds the calculated rollup.
   distributed: "Reported Distributed Filters", // Owner-maintained actual distribution total used when Events cannot be read.
 };
 
@@ -107,6 +108,11 @@ export default {
             console.warn(`Could not resolve ${PROP.totalFilters} for ${name}`, rollupError?.message || rollupError);
           }
         }
+        const usesLegacyTotalFallback = totalFilters == null;
+        if (usesLegacyTotalFallback) totalFilters = anyNumber(p, PROP.legacyTotalFilters);
+        const totalFiltersSource = usesLegacyTotalFallback
+          ? "notion-country-data-legacy-fallback"
+          : "notion-country-data-filters-total";
         const country = countries[iso] = {
           status:  stage,           // raw Notion Stage name — legend matches Notion
           filters: reportedDistributed, // compatibility alias: actual distributed filters
@@ -125,7 +131,7 @@ export default {
           filters: country.potentialFilters,
           peoplePotentialEstimate: country.potentialFilters == null ? null : country.potentialFilters * PEOPLE_PER_FILTER,
           definition: "Country Data Filters (Total) rollup: distributed filters plus filters pending distribution; used for estimated total reach.",
-          source: "notion-country-data-filters-total",
+          source: totalFiltersSource,
           sourceFreshness: metadataFreshness,
         };
         country.metrics.reportedDistributed = {

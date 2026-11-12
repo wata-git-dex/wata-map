@@ -171,6 +171,17 @@ test("resolves an incomplete Filters (Total) rollup through the property endpoin
   assert.equal(payload.countries.GTM.metrics.reportedInCountry.source, "notion-country-data-filters-total");
 });
 
+test("keeps the legacy total visible when Notion withholds Filters (Total)", async (t) => {
+  installFetch(t, {
+    countries: [country({ incompleteTotalFilters: true, legacyInCountry: 150 })],
+    events: [],
+  });
+  const { payload } = await readPayload();
+  assert.equal(payload.countries.GTM.potentialFilters, 150);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.peoplePotentialEstimate, 750);
+  assert.equal(payload.countries.GTM.metrics.reportedInCountry.source, "notion-country-data-legacy-fallback");
+});
+
 test("does not use static or Country Data totals when no qualifying distribution exists", async (t) => {
   installFetch(t, { countries: [country()], events: [event({ status: "Planning", distributed: 999 })] });
   const { payload } = await readPayload();
