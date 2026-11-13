@@ -16,9 +16,24 @@ const EVENT_DATA_SOURCE_ID = "c94d93f9-19bc-83b4-8112-87a824660fb4"; // Deployme
 const EVENT_LEGACY_DATABASE_ID = "381d93f9-19bc-80ae-879e-fb4338d3aec3"; // Filter Events database block (legacy API route)
 const NOTION_VERSION = "2026-03-11";
 const LEGACY_NOTION_VERSION = "2022-06-28";
-const CACHE_VERSION = "2026-11-12-country-filters-total-v5";
+const CACHE_VERSION = "2026-11-13-verified-event-fallback-v6";
 const METRIC_CONTRACT = "actual-and-potential-impact-v2";
 const PEOPLE_PER_FILTER = 5;
+
+// Last verified directly against the Notion Filter Events database on 2026-11-13.
+// This is a safety net only: readable live Events always win. It prevents the public
+// map from reverting to older Country Data fields when the Worker integration loses
+// permission to the Events database.
+const VERIFIED_EVENT_SNAPSHOT = Object.freeze({
+  GTM: { distributed: 464, pending: 14, total: 478 },
+  SLV: { distributed: 72, pending: 0, total: 72 },
+  VNM: { distributed: 209, pending: 0, total: 209 },
+  MMR: { distributed: 122, pending: 10, total: 132 },
+  THA: { distributed: 11, pending: 0, total: 11 },
+  COL: { distributed: 151, pending: 66, total: 217 },
+  NIC: { distributed: 3, pending: 0, total: 3 },
+});
+const VERIFIED_EVENT_SNAPSHOT_DATE = "2026-11-13";
 
 // Notion property names (exact). Change only if you rename columns in Notion.
 const PROP = {
@@ -153,7 +168,14 @@ export default {
         eventResult = applyEventTotals(countries, countryPageToIso, events);
         eventSourceStatus = "events";
       } catch (eventError) {
-        console.warn("Event totals unavailable; using Reported Distributed Filters from Country Data", eventError?.message || eventError);
+        const snapshotCountryCount = applyVerifiedEventSnapshot(countries);
+        eventSourceStatus = snapshotCountryCount > 0 ? "verified-event-snapshot" : "country-data";
+        console.warn(
+          snapshotCountryCount > 0
+            ? `Event totals unavailable; using the ${VERIFIED_EVENT_SNAPSHOT_DATE} verified Event snapshot`
+            : "Event totals unavailable; using Reported Distributed Filters from Country Data",
+          eventError?.message || eventError,
+        );
       }
       sourceFreshness = newestTimestamp(sourceFreshness, eventResult.sourceFreshness);
 
@@ -166,6 +188,7 @@ export default {
         sourceFreshnessSemantics: "Latest Notion last_edited_time among records contributing metadata or counted metrics; not a verification date.",
         dataStatus: "current",
         eventSourceStatus,
+        verifiedEventSnapshotDate: eventSourceStatus === "verified-event-snapshot" ? VERIFIED_EVENT_SNAPSHOT_DATE : null,
         unresolvedAllocation: eventResult.unresolvedAllocation,
         countries,
       };
@@ -224,6 +247,40 @@ export default {
     }
   },
 };
+
+function applyVerifiedEventSnapshot(countries) {
+  let applied = 0;
+  for (const [iso, snapshot] of Object.entries(VERIFIED_EVENT_SNAPSHOT)) {
+    const country = countries[iso];
+    if (!country) continue;
+
+    country.filters = snapshot.distributed;
+    country.potentialFilters = snapshot.total;
+    country.served = snapshot.distributed * PEOPLE_PER_FILTER;
+    country.metrics.reportedInCountry = {
+      filters: snapshot.total,
+      peoplePotentialEstimate: snapshot.total * PEOPLE_PER_FILTER,
+      definition: "Total filters recorded in Notion Filter Events: distributed plus pending distribution; used for estimated total reach.",
+      source: "notion-events-verified-snapshot",
+      sourceFreshness: null,
+    };
+    country.metrics.reportedDistributed = {
+      filters: snapshot.distributed,
+      peopleEstimate: snapshot.distributed * PEOPLE_PER_FILTER,
+      definition: "Filters recorded as distributed in Notion Filter Events; survey coverage is separate.",
+      source: "notion-events-verified-snapshot",
+      sourceFreshness: null,
+    };
+    country.metrics.reportedDroppedOff = {
+      filters: snapshot.pending,
+      definition: "Filters in country pending distribution, calculated from the verified Notion Filter Events totals.",
+      source: "notion-events-verified-snapshot",
+      sourceFreshness: null,
+    };
+    applied += 1;
+  }
+  return applied;
+}
 
 function applyEventTotals(countries, countryPageToIso, events) {
   const totals = new Map();

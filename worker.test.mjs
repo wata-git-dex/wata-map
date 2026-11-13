@@ -318,16 +318,39 @@ test("reports source freshness from contributing Notion records, separately from
   assert.ok(Date.parse(payload.generatedAt));
 });
 
-test("uses the owner-maintained Country Data distribution total when Events cannot be read", async (t) => {
+test("uses the verified Event snapshot when live Events cannot be read", async (t) => {
   installFetch(t, { countries: [country({ totalFilters: 478, distributedCountry: 464 })], events: [], failEvents: true });
   const { response, payload } = await readPayload();
   assert.equal(response.status, 200);
   assert.equal(payload.dataStatus, "current");
-  assert.equal(payload.eventSourceStatus, "country-data");
+  assert.equal(payload.eventSourceStatus, "verified-event-snapshot");
+  assert.equal(payload.verifiedEventSnapshotDate, "2026-11-13");
   assert.equal(payload.countries.GTM.filters, 464);
   assert.equal(payload.countries.GTM.potentialFilters, 478);
   assert.equal(payload.countries.GTM.served, 2320);
-  assert.equal(payload.countries.GTM.metrics.reportedDistributed.source, "notion-country-data");
+  assert.equal(payload.countries.GTM.metrics.reportedDroppedOff.filters, 14);
+  assert.equal(payload.countries.GTM.metrics.reportedDistributed.source, "notion-events-verified-snapshot");
+});
+
+test("verified fallback reconciles the current seven-country totals", async (t) => {
+  const countries = [
+    country({ id: "gt", name: "Guatemala" }),
+    country({ id: "sv", name: "El Salvador" }),
+    country({ id: "vn", name: "Vietnam" }),
+    country({ id: "mm", name: "Myanmar" }),
+    country({ id: "th", name: "Thailand" }),
+    country({ id: "co", name: "Colombia" }),
+    country({ id: "ni", name: "Nicaragua" }),
+  ];
+  installFetch(t, { countries, events: [], failEvents: true });
+  const { payload } = await readPayload();
+  const values = Object.values(payload.countries);
+  assert.equal(values.reduce((sum, item) => sum + item.potentialFilters, 0), 1122);
+  assert.equal(values.reduce((sum, item) => sum + item.filters, 0), 1032);
+  assert.equal(values.reduce((sum, item) => sum + item.metrics.reportedDroppedOff.filters, 0), 90);
+  assert.equal(payload.countries.COL.potentialFilters, 217);
+  assert.equal(payload.countries.COL.filters, 151);
+  assert.equal(payload.countries.COL.metrics.reportedDroppedOff.filters, 66);
 });
 
 test("falls back to Notion's legacy database query route on endpoint compatibility errors", async (t) => {
