@@ -1,1 +1,1 @@
-import "/assets/wata-icons/de91d1d51d1f/runtime.mjs";
+import "/assets/wata-icons/8281eba9d08d/runtime.mjs";
