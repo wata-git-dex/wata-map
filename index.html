@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.5">
+<meta name="application-version" content="1.4.6">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -162,7 +162,7 @@
     .impact{grid-column:1/-1;grid-row:2;width:100%;justify-content:center}
     .kpi{flex:1;min-width:0;padding:8px 9px;text-align:center}
     .kpi b{font-size:20px}
-    .view-menu{position:fixed;top:auto;left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom));width:auto}
+    .view-menu{position:absolute;top:calc(100% + 7px);left:auto;right:0;bottom:auto;width:min(300px,calc(100vw - 24px));max-height:calc(100dvh - 180px);overflow:auto;overscroll-behavior:contain}
     .card{top:auto!important;left:0!important;right:0;bottom:0;width:100%;max-height:min(78dvh,720px);border-radius:22px 22px 0 0;transform:translateY(102%)}
     .card.open{transform:translateY(0)}
   }
@@ -768,6 +768,6 @@ applyTheme(document.documentElement.dataset.theme,false);paint();renderLegendAnd
 </script>
 <script type="module" src="/assets/app-icons/final-v2/app-identities.mjs"></script>
 <script type="module" data-wata-icon-catalog src="/assets/wata-icons/8281eba9d08d/runtime.mjs"></script>
-<script type="module" src="/ios-header/init.mjs?v=1.4.5"></script>
+<script type="module" src="/ios-header/init.mjs?v=1.4.6"></script>
 </body>
 </html>
