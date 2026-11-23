@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.4"/);
+  assert.match(html, /name="application-version" content="1\.4\.5"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
