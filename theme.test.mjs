@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.6"/);
+  assert.match(html, /name="application-version" content="1\.4\.7"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -123,6 +123,26 @@ test('safe drinking water gap is a sourced, distinct view with honest missing da
   assert.match(html, /No national safely managed estimate available/);
   assert.match(html, /leaves it neutral instead of treating missing data as zero/);
   assert.match(html, /drinking-water-data\.js\?v=safely-managed-2024-20261008/);
+});
+
+test('cholera and AWD is a lazy, sourced WHO dashboard layer with honest missing data', () => {
+  assert.match(html, /data-view="cholera" aria-selected="false"/);
+  assert.match(html, />Cholera &amp; AWD</);
+  assert.match(html, /services\.arcgis\.com\/5T5nSi527N4F7luB\/ArcGIS\/rest\/services\/case_adm0_shp\/FeatureServer\/0\/query/);
+  assert.match(html, /const WHO_CHOLERA_CACHE_MS = 6\*60\*60\*1000/);
+  assert.match(html, /if\(currentView==='cholera'\)loadCholeraData\(\)/);
+  assert.match(html, /Cumulative reported cases per 100,000/);
+  assert.match(html, /#f4a81d/);
+  assert.match(html, /#f2682a/);
+  assert.match(html, /#ef3842/);
+  assert.match(html, /#bb2932/);
+  assert.match(html, /#8c171e/);
+  assert.match(html, /A missing report is not evidence of zero cases/);
+  assert.match(html, /Afghanistan and Myanmar|acute watery diarrhoea \(AWD\)/);
+  assert.match(html, /Bangladesh reporting covers Cox’s Bazar/);
+  assert.match(html, /Figures can include suspected and confirmed cases, reporting systems vary/);
+  assert.match(html, /Source: WHO Global Cholera and AWD Dashboard/);
+  assert.doesNotMatch(html, /WHO (logo|emblem)/i);
 });
 
 test('map controls and headline statistics use compact grouped callouts', () => {

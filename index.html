@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.6">
+<meta name="application-version" content="1.4.7">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,6 +49,7 @@
   .view-swatch{width:20px;height:20px;border-radius:6px;border:1px solid var(--line);flex:0 0 auto}.view-swatch.impact-view{background:linear-gradient(135deg,#2DBE9E 0 50%,#F5B841 50%)}
   .view-swatch.stress-view{background:linear-gradient(135deg,#55b98b 0 28%,#edc84f 28% 55%,#ef8b43 55% 78%,#d54b4b 78%)}
   .view-swatch.gap-view{background:linear-gradient(135deg,#2DBE9E 0 20%,#6bc7bb 20% 40%,#edc84f 40% 60%,#ef8b43 60% 80%,#d54b4b 80%)}
+  .view-swatch.cholera-view{background:linear-gradient(135deg,#f4a81d 0 20%,#f2682a 20% 40%,#ef3842 40% 60%,#bb2932 60% 80%,#8c171e 80%)}
   .view-option span:last-child{display:flex;flex-direction:column;gap:3px}.view-option b{font-size:13px}.view-option small{font-size:10px;color:var(--dim)}
   .impact{pointer-events:auto;display:flex;justify-self:center;align-items:stretch;gap:4px;padding:5px;background:var(--control);
     backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 26px rgba(0,0,0,.12)}
@@ -70,8 +71,8 @@
   svg#map{width:100%;height:100%;display:block;touch-action:none}
   .cc{fill:var(--land);stroke:var(--land-line);stroke-width:.4;vector-effect:non-scaling-stroke;transition:fill .35s ease,stroke .2s ease,stroke-width .2s ease}
   .cc.on{filter:drop-shadow(0 0 6px var(--map-halo))}
-  .cc.hasproj,.cc.hasstress,.cc.hasgap{cursor:pointer}
-  [data-map-view="stress"] .cc.wata-country,[data-map-view="gap"] .cc.wata-country{stroke:var(--wata-outline);stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
+  .cc.hasproj,.cc.hasstress,.cc.hasgap,.cc.hascholera{cursor:pointer}
+  [data-map-view="stress"] .cc.wata-country,[data-map-view="gap"] .cc.wata-country,[data-map-view="cholera"] .cc.wata-country{stroke:var(--wata-outline);stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
 
   .legend{position:absolute;left:calc(18px + var(--safe-left));bottom:calc(18px + var(--safe-bottom));z-index:6;background:var(--control);
     backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:170px;transition:background .2s ease,border-color .2s ease}
@@ -198,6 +199,7 @@
         <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
         <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
         <button class="view-option" type="button" role="option" data-view="gap" aria-selected="false"><span class="view-swatch gap-view"></span><span><b>Safe Drinking Water Gap</b><small>Without safely managed service · WHO/UNICEF</small></span></button>
+        <button class="view-option" type="button" role="option" data-view="cholera" aria-selected="false"><span class="view-swatch cholera-view"></span><span><b>Cholera &amp; AWD</b><small>Reported cases · WHO dashboard</small></span></button>
       </div>
     </div>
   </div>
@@ -393,6 +395,7 @@
     </div>
     <div class="source-note" id="stressSource" hidden><a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">WRI Aqueduct 4.0</a><br>Baseline screening data · historical through 2019 · not real-time</div>
     <div class="source-note" id="gapSource" hidden><a href="https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS" target="_blank" rel="noopener noreferrer">WHO/UNICEF JMP via World Bank</a><br>Share without safely managed drinking water · national estimate · missing data stays neutral</div>
+    <div class="source-note" id="choleraSource" hidden><a href="https://who-global-cholera-and-awd-dashboard-1-who.hub.arcgis.com/" target="_blank" rel="noopener noreferrer">WHO Global Cholera and AWD Dashboard</a><br><span id="choleraSourceStatus">Loads when selected · updated monthly · missing reports stay neutral</span></div>
   </div>
 
   <div class="zoom">
@@ -425,6 +428,10 @@
    ========================================================================= */
 const WORKER_URL = 'https://wata-map.cleanwataorg.workers.dev'; // live
 const LIVE_REQUEST_TIMEOUT_MS = 12000;
+const WHO_CHOLERA_DASHBOARD = 'https://who-global-cholera-and-awd-dashboard-1-who.hub.arcgis.com/';
+const WHO_CHOLERA_URL = 'https://services.arcgis.com/5T5nSi527N4F7luB/ArcGIS/rest/services/case_adm0_shp/FeatureServer/0/query?where=cs_cm_p%20%3E%200&outFields=adm0_v_%2Ciso3cod%2Ccas_ttl%2Cdth_ttl%2Ccas_4wk%2Cdth_4wk%2Ccfr_cum%2Ccs_cm_p%2Ccs_4wk_%2Cdate_wk%2Clst_pwk%2Cwho_rgn&returnGeometry=false&f=json';
+const WHO_CHOLERA_CACHE_KEY = 'wata-who-cholera-v1';
+const WHO_CHOLERA_CACHE_MS = 6*60*60*1000;
 
 /* =========================================================================
    STAGES — these match your Notion "Stage" exactly. Order here = legend order.
@@ -507,6 +514,15 @@ const GAP_SCALE=[
   {label:'High gap',range:'30–49%',color:'#ef8b43'},
   {label:'Critical gap',range:'≥50%',color:'#d54b4b'},
 ];
+// Exact cumulative cases-per-100,000 breaks and colors used by WHO's public dashboard web map.
+const CHOLERA_SCALE=[
+  {label:'0–10',range:'per 100k',max:10,color:'#f4a81d'},
+  {label:'>10–100',range:'per 100k',max:100,color:'#f2682a'},
+  {label:'>100–500',range:'per 100k',max:500,color:'#ef3842'},
+  {label:'>500–1,000',range:'per 100k',max:1000,color:'#bb2932'},
+  {label:'>1,000–5,000',range:'per 100k',max:5000,color:'#8c171e'},
+];
+let CHOLERA_DATA={},choleraStatus='idle',choleraRequest=null,choleraFetchedAt=null,choleraDataAsOf=null;
 let currentView='impact';
 
 function stressInfo(iso){
@@ -519,14 +535,69 @@ function gapInfo(iso){
   const [managed,year]=record,gap=Math.round((100-managed)*10)/10,category=gap<5?0:gap<15?1:gap<30?2:gap<50?3:4,scale=GAP_SCALE[category];
   return{managed,gap,year,category,...scale};
 }
+function choleraInfo(iso){
+  const record=CHOLERA_DATA[iso];if(!record)return null;
+  const scale=CHOLERA_SCALE.find(item=>record.cumulativeRate<=item.max)||CHOLERA_SCALE[CHOLERA_SCALE.length-1];
+  return{...record,...scale};
+}
+function whoMetric(value){
+  if(value==null||value==='')return null;
+  const number=Number(value);
+  return Number.isFinite(number)&&Math.abs(number-.0001)>.0000001?number:null;
+}
+function formatWhoDate(value){
+  return Number.isFinite(value)?new Date(value).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}):'date unavailable';
+}
+function normalizeCholeraFeatures(features){
+  const data={};let asOf=null;
+  for(const feature of Array.isArray(features)?features:[]){
+    const a=feature?.attributes||{},iso=String(a.iso3cod||'').trim().toUpperCase(),rate=Number(a.cs_cm_p),rawDate=a.date_wk??a.lst_pwk,date=rawDate==null||rawDate===''?null:Number(rawDate);
+    if(!/^[A-Z]{3}$/.test(iso)||!Number.isFinite(rate)||rate<=0)continue;
+    data[iso]={
+      cumulativeRate:rate,
+      cumulativeCases:whoMetric(a.cas_ttl),cumulativeDeaths:whoMetric(a.dth_ttl),
+      recentCases:whoMetric(a.cas_4wk),recentDeaths:whoMetric(a.dth_4wk),recentRate:whoMetric(a.cs_4wk_),
+      fatalityRate:whoMetric(a.cfr_cum),asOf:Number.isFinite(date)?date:null,region:String(a.who_rgn||'').trim(),
+    };
+    if(Number.isFinite(date))asOf=Math.max(asOf||0,date);
+  }
+  return{data,asOf};
+}
+function readCholeraCache(){
+  try{
+    const cached=JSON.parse(localStorage.getItem(WHO_CHOLERA_CACHE_KEY)||'null');
+    const normalized=normalizeCholeraFeatures(Object.entries(cached?.data||{}).map(([iso,record])=>({attributes:{iso3cod:iso,cs_cm_p:record.cumulativeRate,cas_ttl:record.cumulativeCases,dth_ttl:record.cumulativeDeaths,cas_4wk:record.recentCases,dth_4wk:record.recentDeaths,cs_4wk_:record.recentRate,cfr_cum:record.fatalityRate,date_wk:record.asOf,who_rgn:record.region}})));
+    if(!Object.keys(normalized.data).length)return;
+    CHOLERA_DATA=normalized.data;choleraDataAsOf=normalized.asOf;choleraFetchedAt=Number(cached.fetchedAt)||null;
+    choleraStatus=choleraFetchedAt&&Date.now()-choleraFetchedAt<WHO_CHOLERA_CACHE_MS?'ready':'stale';
+  }catch{}
+}
+async function loadCholeraData(force=false){
+  if(!force&&choleraStatus==='ready')return;
+  if(choleraRequest)return choleraRequest;
+  choleraStatus='loading';if(currentView==='cholera'){paint();renderLegendAndKPIs();}
+  choleraRequest=(async()=>{
+    const response=await fetch(WHO_CHOLERA_URL,{signal:AbortSignal.timeout(LIVE_REQUEST_TIMEOUT_MS)});
+    if(!response.ok)throw new Error(`WHO data ${response.status}`);
+    const payload=await response.json(),normalized=normalizeCholeraFeatures(payload.features);
+    if(!Object.keys(normalized.data).length)throw new Error('WHO data returned no country records');
+    CHOLERA_DATA=normalized.data;choleraDataAsOf=normalized.asOf;choleraFetchedAt=Date.now();choleraStatus='ready';
+    try{localStorage.setItem(WHO_CHOLERA_CACHE_KEY,JSON.stringify({fetchedAt:choleraFetchedAt,data:CHOLERA_DATA}));}catch{}
+  })().catch(()=>{choleraStatus=Object.keys(CHOLERA_DATA).length?'stale':'unavailable';}).finally(()=>{
+    choleraRequest=null;if(currentView==='cholera'){paint();renderLegendAndKPIs();}
+  });
+  return choleraRequest;
+}
+readCholeraCache();
 
 function closeViewMenu(){viewMenu.hidden=true;viewTrigger.setAttribute('aria-expanded','false');}
 function setView(view){
-  currentView=['stress','gap'].includes(view)?view:'impact';
+  currentView=['stress','gap','cholera'].includes(view)?view:'impact';
   document.documentElement.dataset.mapView=currentView;
-  viewLabel.textContent=currentView==='stress'?'Water Stress':currentView==='gap'?'Safe Drinking Water Gap':'WATA Impact';
+  viewLabel.textContent=currentView==='stress'?'Water Stress':currentView==='gap'?'Safe Drinking Water Gap':currentView==='cholera'?'Cholera & AWD':'WATA Impact';
   viewMenu.querySelectorAll('[role="option"]').forEach(option=>option.setAttribute('aria-selected',String(option.dataset.view===currentView)));
   closeViewMenu();card.classList.remove('open');paint();renderLegendAndKPIs();
+  if(currentView==='cholera')loadCholeraData();
 }
 viewTrigger.onclick=()=>{const opening=viewMenu.hidden;viewMenu.hidden=!opening;viewTrigger.setAttribute('aria-expanded',String(opening));if(opening)viewMenu.querySelector(`[data-view="${currentView}"]`).focus();};
 viewMenu.querySelectorAll('[data-view]').forEach(option=>option.onclick=()=>setView(option.dataset.view));
@@ -567,7 +638,7 @@ function applyTheme(theme,persist=true){
 themeToggle.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 
 function paint(){
-  svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj','hasstress','hasgap','wata-country');el.style.fill='';});
+  svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj','hasstress','hasgap','hascholera','wata-country');el.style.fill='';});
   if(currentView==='stress'){
     Object.entries(STRESS_DATA).forEach(([iso,record])=>{
       const el=svg.querySelector('#'+CSS.escape(iso)),scale=STRESS_SCALE[record[1]];
@@ -577,6 +648,11 @@ function paint(){
     Object.entries(SAFE_WATER_DATA).forEach(([iso])=>{
       const el=svg.querySelector('#'+CSS.escape(iso)),gap=gapInfo(iso);
       if(el&&gap){el.style.fill=gap.color;el.classList.add('hasgap');}
+    });
+  }else if(currentView==='cholera'){
+    Object.entries(CHOLERA_DATA).forEach(([iso])=>{
+      const el=svg.querySelector('#'+CSS.escape(iso)),cholera=choleraInfo(iso);
+      if(el&&cholera){el.style.fill=cholera.color;el.classList.add('hascholera');}
     });
   }
   Object.entries(DATA.countries).forEach(([iso,p])=>{
@@ -600,14 +676,23 @@ function renderLegendAndKPIs(){
   document.getElementById('kInCountry').textContent=ink?fmt(inCountry):'—';
   document.getElementById('kPotentialPeople').textContent=ink?fmt(inCountry*PEOPLE_PER_FILTER):'—';
   const rows=document.getElementById('legendRows'); rows.innerHTML='';
-  document.getElementById('legendTitle').textContent=currentView==='stress'?'Water stress':currentView==='gap'?'Safe drinking water gap':'Stage';
+  document.getElementById('legendTitle').textContent=currentView==='stress'?'Water stress':currentView==='gap'?'Safe drinking water gap':currentView==='cholera'?'Cholera & AWD':'Stage';
   document.getElementById('impactUpdated').hidden=currentView!=='impact';
   document.getElementById('stressSource').hidden=currentView!=='stress';
   document.getElementById('gapSource').hidden=currentView!=='gap';
+  document.getElementById('choleraSource').hidden=currentView!=='cholera';
+  const choleraSourceStatus=document.getElementById('choleraSourceStatus');
+  if(choleraStatus==='loading')choleraSourceStatus.textContent='Loading WHO data…';
+  else if(choleraStatus==='unavailable')choleraSourceStatus.textContent='WHO data temporarily unavailable · missing reports stay neutral';
+  else if(choleraDataAsOf)choleraSourceStatus.textContent=`Cumulative reported cases per 100,000 · data through ${formatWhoDate(choleraDataAsOf)} · updated monthly${choleraStatus==='stale'?' · saved copy':''}`;
+  else choleraSourceStatus.textContent='Loads when selected · updated monthly · missing reports stay neutral';
   if(currentView==='stress')STRESS_SCALE.forEach(scale=>{
     const r=document.createElement('div');r.className='lrow';
     r.innerHTML=`<span class="dot" style="background:${scale.color}"></span>${scale.label}<span class="n">${scale.range}</span>`;rows.appendChild(r);
   });else if(currentView==='gap')GAP_SCALE.forEach(scale=>{
+    const r=document.createElement('div');r.className='lrow';
+    r.innerHTML=`<span class="dot" style="background:${scale.color}"></span>${scale.label}<span class="n">${scale.range}</span>`;rows.appendChild(r);
+  });else if(currentView==='cholera')CHOLERA_SCALE.forEach(scale=>{
     const r=document.createElement('div');r.className='lrow';
     r.innerHTML=`<span class="dot" style="background:${scale.color}"></span>${scale.label}<span class="n">${scale.range}</span>`;rows.appendChild(r);
   });else STAGE_ORDER.filter(k=>counts[k]).forEach(k=>{
@@ -658,11 +743,12 @@ wrap.addEventListener('touchend',()=>{pinchD=0;});
 // hover
 svg.addEventListener('mousemove',e=>{if(isTouch)return;const t=e.target;
   if(t.classList&&t.classList.contains('cc')){
-    const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),gap=gapInfo(iso);
+    const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),gap=gapInfo(iso),cholera=choleraInfo(iso);
     svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));t.classList.add('on');
     tip.innerHTML=currentView==='stress'
       ?`${name}<div class="s">${stress?`${stress.label} water stress · ${stress.range}`:'No Aqueduct data'}${p?' · WATA '+p.status:''}</div>`
       :currentView==='gap'?`${name}<div class="s">${gap?`${gap.gap.toFixed(1)}% without safely managed service · ${gap.year}`:'No safely managed estimate'}${p?' · WATA '+p.status:''}</div>`
+      :currentView==='cholera'?`${name}<div class="s">${cholera?`${cholera.cumulativeRate.toLocaleString()} reported cases per 100,000 · ${formatWhoDate(cholera.asOf)}`:'No current WHO dashboard record'}${p?' · WATA '+p.status:''}</div>`
       :p?`${name}<div class="s">${p.status}${p.filters!=null?' · '+fmt(p.filters)+' distributed':''}</div>`:`${name}<div class="s">No project yet</div>`;
     tip.classList.add('show');tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
   }else{tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));}});
@@ -682,11 +768,12 @@ function positionCard(country){
 }
 svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
   if(!(t.classList&&t.classList.contains('cc'))){card.classList.remove('open');return;}
-  const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),gap=gapInfo(iso),stage=p&&STAGE[p.status];
+  const iso=t.id,name=t.getAttribute('data-name')||iso,p=DATA.countries[iso],stress=stressInfo(iso),gap=gapInfo(iso),cholera=choleraInfo(iso),stage=p&&STAGE[p.status];
   if(currentView==='impact'&&!stage)return;
   if(currentView==='stress'&&!stress&&!stage)return;
   if(currentView==='gap'&&!gap&&!stage)return;
-  const c=stage?stage.color:stress?.color||gap.color;
+  if(currentView==='cholera'&&!cholera&&!stage)return;
+  const c=stage?stage.color:stress?.color||gap?.color||cholera?.color||'#59C2D6';
   const countryTotal=stage?(p.potentialFilters==null?p.filters:Math.max(p.filters||0,p.potentialFilters)):null;
   const metrics=stage?`<div class="metrics">
     <div class="metric"><b>${fmt(p.filters)}</b><span>Filters distributed</span></div>
@@ -704,6 +791,14 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
     <span class="context-label">Safe drinking water gap</span><strong>No national safely managed estimate available</strong>
     <p>WHO/UNICEF JMP does not publish a national value for this country in the current dataset, so the map leaves it neutral instead of treating missing data as zero.</p>
   </div>`):'';
+  const choleraFootnote=iso==='AFG'||iso==='MMR'?' WHO identifies this country’s reports as acute watery diarrhoea (AWD).':iso==='BGD'?' Bangladesh reporting covers Cox’s Bazar.':'';
+  const choleraBlock=currentView==='cholera'?(cholera?`<div class="layer-context">
+    <span class="context-label">WHO Cholera &amp; AWD · ${formatWhoDate(cholera.asOf)}</span><strong>${cholera.cumulativeRate.toLocaleString()} cumulative reported cases per 100,000</strong>
+    <p>${cholera.cumulativeCases==null?'Cumulative case count unavailable':`${fmt(cholera.cumulativeCases)} cumulative reported cases`}${cholera.recentCases==null?'':` · ${fmt(cholera.recentCases)} reported in the last 28 days`}${cholera.cumulativeDeaths==null?'':` · ${fmt(cholera.cumulativeDeaths)} cumulative reported deaths`}.${choleraFootnote} Figures can include suspected and confirmed cases, reporting systems vary, and WHO may revise the data. <a href="${WHO_CHOLERA_DASHBOARD}" target="_blank" rel="noopener noreferrer">Source: WHO Global Cholera and AWD Dashboard</a> · accessed ${formatWhoDate(Date.now())}.</p>
+  </div>`:`<div class="layer-context">
+    <span class="context-label">WHO Cholera &amp; AWD</span><strong>${choleraStatus==='loading'?'Loading WHO data…':'No current WHO dashboard record'}</strong>
+    <p>A missing report is not evidence of zero cases. The map leaves countries without a current dashboard record neutral.</p>
+  </div>`):'';
   const inset=stage?countryInset(iso,name,p.regions,c):'';
   const regions=stage&&p.regions&&p.regions.length?`<div class="seclbl">Areas</div>
     <div class="regions">${p.regions.map(r=>`<span class="rpill">${esc(r)}</span>`).join('')}</div>`:'';
@@ -714,10 +809,10 @@ svg.addEventListener('click',e=>{if(moved)return;const t=e.target;
   if(stage&&p.ctaUrl)actions.push(`<a class="action ${p.status==='Lead'?'start':'support'}" href="${esc(p.ctaUrl)}" target="_blank" rel="noopener noreferrer">${esc(p.ctaLabel||`Help bring this program to ${name}`)}</a>`);
   if(stage&&p.countryUrl)actions.push(`<a class="action${p.status==='Lead'?' secondary':''}" href="${esc(p.countryUrl)}" target="_blank" rel="noopener noreferrer">Explore ${esc(name)}</a>`);
   const actionBlock=actions.length?`<div class="actions">${actions.join('')}</div>`:'';
-  const pill=stage?`${p.status}`:currentView==='stress'?'Aqueduct baseline':'JMP estimate';
+  const pill=stage?`${p.status}`:currentView==='stress'?'Aqueduct baseline':currentView==='gap'?'JMP estimate':'WHO surveillance';
   cardBody.innerHTML=`<span class="pill" style="background:${c}22;color:${c};border:1px solid ${c}55">
     <span class="dot" style="background:${c}"></span>${pill}</span>
-    <h2>${esc(name)}</h2>${metrics}${stressBlock}${gapBlock}${inset}${regions}${stage&&p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
+    <h2>${esc(name)}</h2>${metrics}${stressBlock}${gapBlock}${choleraBlock}${inset}${regions}${stage&&p.note?`<div class="note">${esc(p.note)}</div>`:''}${gal}${actionBlock}`;
   cardBody.querySelectorAll('.gal img').forEach(img=>{img.onclick=()=>openLB(img.dataset.full);});
   focusCountry(t);
   positionCard(t);card.classList.add('open');card.querySelector('.x').focus();tip.classList.remove('show');svg.querySelectorAll('.cc.on').forEach(x=>x.classList.remove('on'));});
@@ -768,6 +863,6 @@ applyTheme(document.documentElement.dataset.theme,false);paint();renderLegendAnd
 </script>
 <script type="module" src="/assets/app-icons/final-v2/app-identities.mjs"></script>
 <script type="module" data-wata-icon-catalog src="/assets/wata-icons/8281eba9d08d/runtime.mjs"></script>
-<script type="module" src="/ios-header/init.mjs?v=1.4.6"></script>
+<script type="module" src="/ios-header/init.mjs?v=1.4.7"></script>
 </body>
 </html>
