@@ -6,8 +6,8 @@ const index=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const init=readFileSync(new URL('./init.mjs',import.meta.url),'utf8');
 
 test('phone header mounts through the shared helper without adding map clearance',()=>{
-  assert.match(index,/application-version" content="1\.4\.7"/);
-  assert.match(index,/\/ios-header\/init\.mjs\?v=1\.4\.7/);
+  assert.match(index,/application-version" content="1\.4\.8"/);
+  assert.match(index,/\/ios-header\/init\.mjs\?v=1\.4\.8/);
   assert.match(init,/document\.querySelector\('\.head'\)/);
   assert.match(init,/reserveSpace:false/);
   assert.match(init,/safeAreaIncluded:true/);

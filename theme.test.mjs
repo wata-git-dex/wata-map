@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.7"/);
+  assert.match(html, /name="application-version" content="1\.4\.8"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -131,7 +131,7 @@ test('cholera and AWD is a lazy, sourced WHO dashboard layer with honest missing
   assert.match(html, /services\.arcgis\.com\/5T5nSi527N4F7luB\/ArcGIS\/rest\/services\/case_adm0_shp\/FeatureServer\/0\/query/);
   assert.match(html, /const WHO_CHOLERA_CACHE_MS = 6\*60\*60\*1000/);
   assert.match(html, /if\(currentView==='cholera'\)loadCholeraData\(\)/);
-  assert.match(html, /Cumulative reported cases per 100,000/);
+  assert.match(html, /cumulative reported cases per 100,000/i);
   assert.match(html, /#f4a81d/);
   assert.match(html, /#f2682a/);
   assert.match(html, /#ef3842/);
@@ -147,7 +147,7 @@ test('cholera and AWD is a lazy, sourced WHO dashboard layer with honest missing
 
 test('map controls and headline statistics use compact grouped callouts', () => {
   assert.match(html, /\.head\{[^}]*display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/s);
-  assert.match(html, /\.impact\{[^}]*padding:5px[^}]*background:var\(--control\)[^}]*border:1px solid var\(--line\)/s);
+  assert.match(html, /\.impact\{[^}]*padding:5px[^}]*background:var\(--chrome\)[^}]*border:1px solid var\(--line\)/s);
   assert.match(html, /\.impact\{[^}]*justify-self:center/s);
   assert.match(html, /\.view-control\{[^}]*justify-self:end/s);
   assert.match(html, /\.kpi:nth-child\(2\)\{--kpi-accent:#2DBE9E\}/);
@@ -161,6 +161,18 @@ test('map controls and headline statistics use compact grouped callouts', () => 
   assert.ok(headerMarkup.indexOf('class="impact"') < headerMarkup.indexOf('class="view-control"'));
   const impactMarkup = html.match(/<div class="impact">([\s\S]*?)<\/div>\s*<div class="view-control"/)?.[1] || '';
   assert.doesNotMatch(impactMarkup, /themeToggle/);
+});
+
+test('tablet chrome is solid while the map remains visible between compact controls', () => {
+  assert.match(html, /--chrome:#0a202b/);
+  assert.match(html, /\[data-theme="light"\][^{]*\{[^}]*--chrome:#ffffff/s);
+  assert.match(html, /\.title\{[^}]*background:var\(--chrome\)[^}]*box-shadow/s);
+  assert.match(html, /\.impact\{[^}]*background:var\(--chrome\)/s);
+  assert.match(html, /\.view-trigger\{[^}]*background:var\(--chrome\)/s);
+  assert.doesNotMatch(html, /\.head\{[^}]*background:/s);
+  assert.match(html, /\.legend\{[^}]*width:min\(220px[^}]*background:var\(--chrome\)/s);
+  assert.match(html, />WHO dashboard<\/a>/);
+  assert.match(html, /missing = no report/);
 });
 
 test('map navigation leaves page scrolling alone while controls and country clicks zoom', () => {
