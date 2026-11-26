@@ -14,10 +14,11 @@ test('all inline scripts are valid JavaScript', () => {
 });
 
 test('theme toggle is a single accessible map control', () => {
-  assert.match(html, /id="themeToggle"/);
-  assert.match(html, /aria-label="Switch to light mode"/);
+  assert.match(html, /id="themeToggle"[^>]*role="switch"[^>]*aria-label="Light mode"[^>]*aria-checked="false"/);
   assert.match(html, /class="moon"/);
   assert.match(html, /class="sun"/);
+  assert.match(html, /class="theme-knob"/);
+  assert.match(html, /themeToggle\.setAttribute\('aria-checked',String\(!dark\)\)/);
   assert.doesNotMatch(html, /id="menuButton"|id="languageMenuButton"/);
 });
 
