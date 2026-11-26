@@ -189,8 +189,10 @@ test('tablet chrome is solid while the map remains visible between compact contr
 
 test('map navigation leaves page scrolling alone while controls and country clicks zoom', () => {
   assert.doesNotMatch(html, /addEventListener\('wheel'|onwheel|Math\.exp\(delta/);
-  assert.match(html, /document\.getElementById\('zin'\)\.onclick/);
-  assert.match(html, /document\.getElementById\('zout'\)\.onclick/);
+  assert.match(html, /id="zoomRange" type="range" min="0" max="100"/);
+  assert.match(html, /const BASE=\{x:0,y:12,w:1000,h:412\},MAX_ZOOM=5/);
+  assert.match(html, /zoomRange\.oninput=/);
+  assert.match(html, /aria-valuetext/);
   assert.match(html, /function focusCountry\(/);
   assert.match(html, /BASE\.w\*\.78/);
   assert.match(html, /focusCountry\(t\)/);
