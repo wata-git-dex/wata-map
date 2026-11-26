@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a24">
-<meta name="application-version" content="1.4.8">
+<meta name="application-version" content="1.4.9">
 <title>Water Access To All — Project Map</title>
 <script>try{if(window.self!==window.top)document.documentElement.dataset.embedded='true';if(localStorage.getItem('wata-theme')==='light')document.documentElement.dataset.theme='light'}catch{}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,23 +25,23 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;height:100%}
   body{background:var(--ocean);color:var(--ink);font-family:var(--font);overflow:hidden}
-  #app{position:relative;width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden;
-    background:radial-gradient(1200px 700px at 70% -10%, var(--glow-one) 0%, transparent 60%),
-               radial-gradient(900px 600px at -5% 110%, var(--glow-two) 0%, transparent 55%), var(--ocean);
+  #app{position:relative;width:100%;height:100vh;height:100dvh;min-height:0;overflow:hidden;background:var(--ocean);
     transition:background .2s ease,color .2s ease}
-  .head{position:absolute;top:0;left:0;right:0;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-    align-items:start;gap:18px;padding:calc(16px + var(--safe-top)) calc(18px + var(--safe-right)) 16px calc(18px + var(--safe-left));pointer-events:none}
-  .title{display:flex;flex-direction:column;line-height:1.05;pointer-events:auto;width:max-content;padding:8px 11px;border:1px solid var(--line);border-radius:12px;background:var(--chrome);box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  .head{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;flex-direction:column;align-items:center;gap:7px;
+    padding:calc(12px + var(--safe-top)) calc(18px + var(--safe-right)) 12px calc(18px + var(--safe-left));pointer-events:none}
+  .title{display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.05;pointer-events:auto;width:max-content;padding:7px 13px 6px;border:1px solid var(--line);border-radius:12px;background:var(--chrome);color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.16);cursor:pointer}
+  .title:hover,.title:focus-visible{border-color:#59c2d6;outline:none}
   .title .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600}
-  .title h1{margin:2px 0 0;font-size:clamp(18px,2.4vw,26px);font-weight:700;letter-spacing:-.01em}
-  .view-control{position:relative;width:max-content;justify-self:end;pointer-events:auto}
+  .title-main{display:flex;align-items:center;justify-content:center;gap:5px}
+  .title .map-title{margin:2px 0 0;font:400 clamp(21px,2.7vw,29px)/1 'Bangers',cursive;letter-spacing:.7px}
+  .view-control{position:relative;width:max-content;pointer-events:auto}
   .view-trigger{min-height:44px;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:13px;
     background:var(--chrome);color:var(--ink);font:600 12px/1.2 var(--font);cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.16)}
   .view-trigger:hover,.view-trigger:focus-visible{border-color:#59c2d6;outline:none}
   .view-trigger svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .view-trigger .chev{width:13px;height:13px;transition:transform .18s ease}.view-trigger[aria-expanded="true"] .chev{transform:rotate(180deg)}
   .view-label{color:var(--dim);font-weight:500}.view-label strong{color:var(--ink);font-weight:700}
-  .view-menu{position:absolute;top:calc(100% + 7px);right:0;width:260px;padding:7px;border:1px solid var(--line);border-radius:15px;
+  .view-menu{position:absolute;top:auto;bottom:calc(100% + 7px);left:0;right:auto;width:260px;padding:7px;border:1px solid var(--line);border-radius:15px;
     background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(16px);box-shadow:0 18px 46px rgba(0,0,0,.3);z-index:30}
   .view-menu[hidden]{display:none}.view-option{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:10px;
     background:transparent;color:var(--ink);font-family:var(--font);text-align:left;cursor:pointer}
@@ -51,8 +51,11 @@
   .view-swatch.gap-view{background:linear-gradient(135deg,#2DBE9E 0 20%,#6bc7bb 20% 40%,#edc84f 40% 60%,#ef8b43 60% 80%,#d54b4b 80%)}
   .view-swatch.cholera-view{background:linear-gradient(135deg,#f4a81d 0 20%,#f2682a 20% 40%,#ef3842 40% 60%,#bb2932 60% 80%,#8c171e 80%)}
   .view-option span:last-child{display:flex;flex-direction:column;gap:3px}.view-option b{font-size:13px}.view-option small{font-size:10px;color:var(--dim)}
-  .impact{pointer-events:auto;display:flex;justify-self:center;align-items:stretch;gap:4px;padding:5px;background:var(--chrome);
+  .impact-toggle .chev{width:13px;height:13px;margin-top:2px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .18s ease}
+  .impact-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .impact{pointer-events:auto;display:flex;align-items:stretch;gap:4px;padding:5px;background:var(--chrome);
     border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  .impact[hidden]{display:none}
   .kpi{--kpi-accent:#59C2D6;position:relative;overflow:hidden;padding:8px 13px;text-align:center;min-width:86px;border:1px solid color-mix(in srgb,var(--kpi-accent) 34%,var(--line));border-radius:10px;
     background:color-mix(in srgb,var(--kpi-accent) 12%,transparent);transition:background .2s ease,border-color .2s ease}
   .kpi:nth-child(2){--kpi-accent:#2DBE9E}.kpi:nth-child(3){--kpi-accent:#F5B841}
@@ -74,8 +77,10 @@
   .cc.hasproj,.cc.hasstress,.cc.hasgap,.cc.hascholera{cursor:pointer}
   [data-map-view="stress"] .cc.wata-country,[data-map-view="gap"] .cc.wata-country,[data-map-view="cholera"] .cc.wata-country{stroke:var(--wata-outline);stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
 
-  .legend{position:absolute;left:calc(18px + var(--safe-left));bottom:calc(18px + var(--safe-bottom));z-index:6;width:min(220px,calc(100vw - 92px - var(--safe-left) - var(--safe-right)));background:var(--chrome);
+  .legend{position:absolute;left:50%;bottom:calc(78px + var(--safe-bottom));transform:translateX(-50%);z-index:7;width:min(170px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)));background:var(--chrome);
     border:1px solid var(--line);border-radius:12px;padding:9px 10px;transition:background .2s ease,border-color .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  .legend[hidden]{display:none}
+  [data-map-view="stress"] .legend,[data-map-view="gap"] .legend,[data-map-view="cholera"] .legend{width:min(220px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)))}
   .legend h3{margin:0 0 5px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim);font-weight:600}
   .lrow{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:11px}
   .dot{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
@@ -91,13 +96,17 @@
   .refresh.spin svg{animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  .zoom{position:absolute;right:calc(18px + var(--safe-right));bottom:calc(18px + var(--safe-bottom));z-index:6;display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:5px;background:var(--control);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 26px rgba(0,0,0,.12)}
-  .zoom button{width:40px;height:40px;border-radius:10px;border:1px solid transparent;
+  .zoom{position:absolute;left:50%;right:auto;bottom:calc(18px + var(--safe-bottom));transform:translateX(-50%);z-index:6;display:flex;flex-direction:row;align-items:center;gap:3px;
+    max-width:calc(100vw - 36px - var(--safe-left) - var(--safe-right));padding:5px;background:var(--chrome);border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 26px rgba(0,0,0,.18)}
+  .zoom>button{width:40px;height:40px;border-radius:10px;border:1px solid transparent;
     background:transparent;color:var(--ink);font-size:18px;cursor:pointer;
     display:grid;place-items:center;font-family:var(--font)}
-  .zoom button:hover{background:rgba(45,190,158,.18);border-color:#2DBE9E}
+  .zoom>button:hover{background:rgba(45,190,158,.18);border-color:#2DBE9E}
+  .zoom .view-trigger{width:auto;max-width:225px;padding:8px 11px;font-size:12px}
+  .zoom .view-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .zoom .rst{width:40px;padding:0}.zoom .rst svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .zoom .legend-toggle svg{width:18px;height:18px}.zoom .legend-toggle circle:nth-of-type(1){fill:#2DBE9E}.zoom .legend-toggle circle:nth-of-type(2){fill:#59C2D6}.zoom .legend-toggle circle:nth-of-type(3){fill:#F5B841}
+  .zoom .legend-toggle[aria-expanded="true"]{background:rgba(45,190,158,.18);border-color:#2DBE9E}
 
   .tip{position:fixed;z-index:20;pointer-events:none;background:var(--deep);border:1px solid var(--line);
     border-radius:8px;padding:6px 10px;font-size:12px;white-space:nowrap;opacity:0;transform:translateY(4px);
@@ -157,13 +166,16 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   @media (max-width:640px){
-    .legend{left:calc(12px + var(--safe-left));bottom:calc(12px + var(--safe-bottom));width:min(205px,calc(100vw - 82px - var(--safe-left) - var(--safe-right)));padding:8px 9px}
-    .zoom{right:calc(12px + var(--safe-right));bottom:calc(12px + var(--safe-bottom))} .head{grid-template-columns:minmax(0,1fr) auto;gap:10px 8px;padding:calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) 12px calc(12px + var(--safe-left))}
-    .title{grid-column:1;grid-row:1}.view-control{grid-column:2;grid-row:1}.view-trigger{padding-inline:10px}.view-label{font-size:0}.view-label strong{font-size:12px}
-    .impact{grid-column:1/-1;grid-row:2;width:100%;justify-content:center}
+    .legend{left:50%;bottom:calc(70px + var(--safe-bottom));width:min(160px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)));padding:8px 9px}
+    [data-map-view="stress"] .legend,[data-map-view="gap"] .legend,[data-map-view="cholera"] .legend{width:min(205px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)))}
+    .zoom{bottom:calc(12px + var(--safe-bottom));max-width:calc(100vw - 24px - var(--safe-left) - var(--safe-right))}
+    .head{gap:6px;padding:calc(10px + var(--safe-top)) calc(12px + var(--safe-right)) 10px calc(12px + var(--safe-left))}
+    .title{padding:6px 10px}.title .eyebrow{font-size:9px}.title .map-title{font-size:20px}
+    .impact{width:min(100%,330px);justify-content:center}
     .kpi{flex:1;min-width:0;padding:8px 9px;text-align:center}
     .kpi b{font-size:20px}
-    .view-menu{position:absolute;top:calc(100% + 7px);left:auto;right:0;bottom:auto;width:min(300px,calc(100vw - 24px));max-height:calc(100dvh - 180px);overflow:auto;overscroll-behavior:contain}
+    .zoom .view-trigger{min-width:0;max-width:116px;padding-inline:9px}.view-label{font-size:0}.view-label strong{font-size:16px}
+    .view-menu{position:absolute;top:auto;bottom:calc(100% + 7px);left:0;right:auto;width:min(280px,calc(100vw - 24px));max-height:calc(100dvh - 180px);overflow:auto;overscroll-behavior:contain}
     .card{top:auto!important;left:0!important;right:0;bottom:0;width:100%;max-height:min(78dvh,720px);border-radius:22px 22px 0 0;transform:translateY(102%)}
     .card.open{transform:translateY(0)}
   }
@@ -183,24 +195,11 @@
 <body>
 <div id="app">
   <div class="head">
-    <div class="title"><span class="eyebrow">Water Access To All</span><h1>Impact map</h1></div>
-    <div class="impact">
+    <button class="title impact-toggle" id="impactToggle" type="button" aria-expanded="false" aria-controls="impactStats" aria-label="Show impact totals" title="Show impact totals"><span class="eyebrow">Water Access To All</span><span class="title-main"><span class="map-title" role="heading" aria-level="1">Impact map</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></span></button>
+    <div class="impact" id="impactStats" hidden>
       <div class="kpi"><b id="kCountries">0</b><span>Countries</span></div>
       <div class="kpi"><b id="kInCountry">—</b><span>Total filters</span></div>
       <div class="kpi"><b id="kPotentialPeople">—</b><span>Total impact</span></div>
-    </div>
-    <div class="view-control" id="viewControl">
-      <button class="view-trigger" id="viewTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="viewMenu">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg>
-        <span class="view-label">View: <strong id="viewLabel">WATA Impact</strong></span>
-        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
-      </button>
-      <div class="view-menu" id="viewMenu" role="listbox" aria-label="Map view" hidden>
-        <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
-        <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
-        <button class="view-option" type="button" role="option" data-view="gap" aria-selected="false"><span class="view-swatch gap-view"></span><span><b>Safe Drinking Water Gap</b><small>Without safely managed service · WHO/UNICEF</small></span></button>
-        <button class="view-option" type="button" role="option" data-view="cholera" aria-selected="false"><span class="view-swatch cholera-view"></span><span><b>Cholera &amp; AWD</b><small>Reported cases · WHO dashboard</small></span></button>
-      </div>
     </div>
   </div>
 
@@ -385,7 +384,7 @@
     </svg>
   </div>
 
-  <div class="legend" id="legend">
+  <div class="legend" id="legend" hidden>
     <h3 id="legendTitle">Stage</h3><div id="legendRows"></div>
     <div class="updated" id="impactUpdated">
       <button class="refresh" id="refreshBtn" title="Pull latest from Notion" aria-label="Refresh">
@@ -399,6 +398,20 @@
   </div>
 
   <div class="zoom">
+    <button class="legend-toggle" id="legendToggle" type="button" aria-expanded="false" aria-controls="legend" aria-label="Show map legend" title="Map legend"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="5" cy="12" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M10 6h9M10 12h9M10 18h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    <div class="view-control" id="viewControl">
+      <button class="view-trigger" id="viewTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="viewMenu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg>
+        <span class="view-label"><strong id="viewLabel">WATA Impact</strong></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+      </button>
+      <div class="view-menu" id="viewMenu" role="listbox" aria-label="Map view" hidden>
+        <button class="view-option" type="button" role="option" data-view="impact" aria-selected="true"><span class="view-swatch impact-view"></span><span><b>WATA Impact</b><small>Programs, filters and locations</small></span></button>
+        <button class="view-option" type="button" role="option" data-view="stress" aria-selected="false"><span class="view-swatch stress-view"></span><span><b>Water Stress</b><small>WRI Aqueduct 4.0 baseline</small></span></button>
+        <button class="view-option" type="button" role="option" data-view="gap" aria-selected="false"><span class="view-swatch gap-view"></span><span><b>Safe Drinking Water Gap</b><small>Without safely managed service · WHO/UNICEF</small></span></button>
+        <button class="view-option" type="button" role="option" data-view="cholera" aria-selected="false"><span class="view-swatch cholera-view"></span><span><b>Cholera &amp; AWD</b><small>Reported cases · WHO dashboard</small></span></button>
+      </div>
+    </div>
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="true" title="Switch to light mode">
       <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
       <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -492,6 +505,7 @@ const svg=document.getElementById('map'), wrap=document.getElementById('wrap');
 const tip=document.getElementById('tip'), card=document.getElementById('card'), cardBody=document.getElementById('cardBody');
 const themeToggle=document.getElementById('themeToggle');
 const viewTrigger=document.getElementById('viewTrigger'),viewMenu=document.getElementById('viewMenu'),viewLabel=document.getElementById('viewLabel');
+const legend=document.getElementById('legend'),legendToggle=document.getElementById('legendToggle');
 const PEOPLE_PER_FILTER=5;
 const fmt=n=>n==null?'—':Number(n).toLocaleString();
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -591,17 +605,19 @@ async function loadCholeraData(force=false){
 readCholeraCache();
 
 function closeViewMenu(){viewMenu.hidden=true;viewTrigger.setAttribute('aria-expanded','false');}
+function setLegendOpen(open){legend.hidden=!open;legendToggle.setAttribute('aria-expanded',String(open));legendToggle.setAttribute('aria-label',open?'Hide map legend':'Show map legend');}
 function setView(view){
   currentView=['stress','gap','cholera'].includes(view)?view:'impact';
   document.documentElement.dataset.mapView=currentView;
   viewLabel.textContent=currentView==='stress'?'Water Stress':currentView==='gap'?'Safe Drinking Water Gap':currentView==='cholera'?'Cholera & AWD':'WATA Impact';
   viewMenu.querySelectorAll('[role="option"]').forEach(option=>option.setAttribute('aria-selected',String(option.dataset.view===currentView)));
-  closeViewMenu();card.classList.remove('open');paint();renderLegendAndKPIs();
+  closeViewMenu();setLegendOpen(currentView!=='impact');card.classList.remove('open');paint();renderLegendAndKPIs();
   if(currentView==='cholera')loadCholeraData();
 }
 viewTrigger.onclick=()=>{const opening=viewMenu.hidden;viewMenu.hidden=!opening;viewTrigger.setAttribute('aria-expanded',String(opening));if(opening)viewMenu.querySelector(`[data-view="${currentView}"]`).focus();};
+legendToggle.onclick=()=>setLegendOpen(legend.hidden);
 viewMenu.querySelectorAll('[data-view]').forEach(option=>option.onclick=()=>setView(option.dataset.view));
-document.addEventListener('click',event=>{if(!document.getElementById('viewControl').contains(event.target))closeViewMenu();});
+document.addEventListener('click',event=>{const inView=document.getElementById('viewControl').contains(event.target);if(!inView)closeViewMenu();if(!inView&&!legend.contains(event.target)&&event.target!==legendToggle&&!legendToggle.contains(event.target))setLegendOpen(false);});
 
 function countryInset(iso,name,regions,color){
   const source=svg.querySelector('#'+CSS.escape(iso));if(!source)return'';
@@ -636,6 +652,9 @@ function applyTheme(theme,persist=true){
   if(persist)try{localStorage.setItem('wata-theme',next);}catch{}
 }
 themeToggle.onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+const impactToggle=document.getElementById('impactToggle'),impactStats=document.getElementById('impactStats');
+function setImpactStats(open){impactStats.hidden=!open;impactToggle.setAttribute('aria-expanded',String(open));impactToggle.setAttribute('aria-label',open?'Hide impact totals':'Show impact totals');}
+impactToggle.onclick=()=>setImpactStats(impactStats.hidden);
 
 function paint(){
   svg.querySelectorAll('.cc').forEach(el=>{el.classList.remove('hasproj','hasstress','hasgap','hascholera','wata-country');el.style.fill='';});
@@ -863,6 +882,6 @@ applyTheme(document.documentElement.dataset.theme,false);paint();renderLegendAnd
 </script>
 <script type="module" src="/assets/app-icons/final-v2/app-identities.mjs"></script>
 <script type="module" data-wata-icon-catalog src="/assets/wata-icons/8281eba9d08d/runtime.mjs"></script>
-<script type="module" src="/ios-header/init.mjs?v=1.4.8"></script>
+<script type="module" src="/ios-header/init.mjs?v=1.4.9"></script>
 </body>
 </html>

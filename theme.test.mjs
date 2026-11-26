@@ -26,7 +26,7 @@ test('light and dark themes persist through the shared WATA preference', () => {
   assert.match(html, /localStorage\.setItem\('wata-theme',next\)/);
   assert.match(html, /theme-color/);
   assert.match(html, /themeToggle\.onclick/);
-  assert.match(html, /name="application-version" content="1\.4\.8"/);
+  assert.match(html, /name="application-version" content="1\.4\.9"/);
 });
 
 test('headline stays simple while country detail distinguishes inventory and distribution', () => {
@@ -146,21 +146,31 @@ test('cholera and AWD is a lazy, sourced WHO dashboard layer with honest missing
 });
 
 test('map controls and headline statistics use compact grouped callouts', () => {
-  assert.match(html, /\.head\{[^}]*display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/s);
+  assert.match(html, /\.head\{[^}]*display:flex;flex-direction:column;align-items:center/s);
   assert.match(html, /\.impact\{[^}]*padding:5px[^}]*background:var\(--chrome\)[^}]*border:1px solid var\(--line\)/s);
-  assert.match(html, /\.impact\{[^}]*justify-self:center/s);
-  assert.match(html, /\.view-control\{[^}]*justify-self:end/s);
+  assert.match(html, /id="impactToggle"[^>]*aria-expanded="false"[^>]*aria-controls="impactStats"/);
+  assert.match(html, /class="title impact-toggle"[^>]*id="impactToggle"[^>]*aria-label="Show impact totals"[^>]*title="Show impact totals"/);
+  assert.match(html, /class="map-title" role="heading" aria-level="1">Impact map<\/span>/);
+  assert.doesNotMatch(html, />Impact totals\s*<svg/);
+  assert.match(html, /\.title \.map-title\{[^}]*'Bangers',cursive/);
+  assert.match(html, /class="impact" id="impactStats" hidden/);
+  assert.match(html, /class="legend" id="legend" hidden/);
+  assert.match(html, /id="legendToggle"[^>]*aria-expanded="false"[^>]*aria-controls="legend"[^>]*aria-label="Show map legend"/);
+  assert.match(html, /function setLegendOpen\(open\)\{legend\.hidden=!open;legendToggle\.setAttribute\('aria-expanded',String\(open\)\);legendToggle\.setAttribute\('aria-label',open\?'Hide map legend':'Show map legend'\);\}/);
+  assert.match(html, /function setImpactStats\(open\)\{impactStats\.hidden=!open;impactToggle\.setAttribute\('aria-expanded',String\(open\)\);impactToggle\.setAttribute\('aria-label',open\?'Hide impact totals':'Show impact totals'\);\}/);
+  assert.match(html, /impactToggle\.onclick=\(\)=>setImpactStats\(impactStats\.hidden\)/);
   assert.match(html, /\.kpi:nth-child\(2\)\{--kpi-accent:#2DBE9E\}/);
   assert.match(html, /\.kpi:nth-child\(3\)\{--kpi-accent:#F5B841\}/);
-  assert.match(html, /\.zoom\{[^}]*gap:3px[^}]*padding:5px[^}]*background:var\(--control\)/s);
+  assert.match(html, /\.zoom\{[^}]*left:50%[^}]*bottom:calc\(18px \+ var\(--safe-bottom\)\)[^}]*flex-direction:row/s);
+  assert.match(html, /\.zoom\{[^}]*padding:5px[^}]*background:var\(--chrome\)/s);
+  assert.match(html, /\.zoom>button\{width:40px;height:40px/);
+  assert.doesNotMatch(html, /\.zoom button\{width:40px;height:40px/);
   assert.match(html, /\.zoom \.rst\{width:40px;padding:0\}/);
   assert.match(html, /<button id="rst" class="rst" aria-label="Reset view" title="Reset view"><svg/);
-  assert.match(html, /<div class="zoom">\s*<button class="theme-toggle" id="themeToggle"/);
+  assert.match(html, /<div class="zoom">\s*<button class="legend-toggle"[\s\S]*?<div class="view-control" id="viewControl">[\s\S]*?<button class="theme-toggle" id="themeToggle"/);
   const headerMarkup = html.match(/<div class="head">([\s\S]*?)<\/div>\s*<div id="wrap">/)?.[1] || '';
-  assert.ok(headerMarkup.indexOf('class="title"') < headerMarkup.indexOf('class="impact"'));
-  assert.ok(headerMarkup.indexOf('class="impact"') < headerMarkup.indexOf('class="view-control"'));
-  const impactMarkup = html.match(/<div class="impact">([\s\S]*?)<\/div>\s*<div class="view-control"/)?.[1] || '';
-  assert.doesNotMatch(impactMarkup, /themeToggle/);
+  assert.ok(headerMarkup.indexOf('id="impactToggle"') < headerMarkup.indexOf('class="impact"'));
+  assert.doesNotMatch(headerMarkup, /viewControl|themeToggle|Zoom in/);
 });
 
 test('tablet chrome is solid while the map remains visible between compact controls', () => {
@@ -170,7 +180,8 @@ test('tablet chrome is solid while the map remains visible between compact contr
   assert.match(html, /\.impact\{[^}]*background:var\(--chrome\)/s);
   assert.match(html, /\.view-trigger\{[^}]*background:var\(--chrome\)/s);
   assert.doesNotMatch(html, /\.head\{[^}]*background:/s);
-  assert.match(html, /\.legend\{[^}]*width:min\(220px[^}]*background:var\(--chrome\)/s);
+  assert.match(html, /\.legend\{[^}]*width:min\(170px[^}]*background:var\(--chrome\)/s);
+  assert.match(html, /\[data-map-view="stress"\] \.legend[^}]*width:min\(220px/s);
   assert.match(html, />WHO dashboard<\/a>/);
   assert.match(html, /missing = no report/);
 });
@@ -201,8 +212,9 @@ test('standalone map chrome respects iPhone safe areas without double-insetting 
   assert.match(html, /window\.self!==window\.top/);
   assert.match(html, /\[data-embedded="true"\]\{--safe-top:0px;--safe-right:0px;--safe-bottom:0px;--safe-left:0px\}/);
   assert.match(html, /\.head\{[^}]*var\(--safe-top\)[^}]*var\(--safe-right\)[^}]*var\(--safe-left\)/s);
-  assert.match(html, /\.legend\{[^}]*var\(--safe-left\)[^}]*var\(--safe-bottom\)/s);
-  assert.match(html, /\.zoom\{[^}]*var\(--safe-right\)[^}]*var\(--safe-bottom\)/s);
+  assert.match(html, /\.legend\{[^}]*var\(--safe-bottom\)[^}]*var\(--safe-left\)[^}]*var\(--safe-right\)/s);
+  assert.match(html, /\.zoom\{[^}]*var\(--safe-bottom\)/s);
+  assert.match(html, /\.zoom\{[^}]*var\(--safe-left\)[^}]*var\(--safe-right\)/s);
   assert.match(html, /\.card \.body\{[^}]*var\(--safe-top\)[^}]*var\(--safe-bottom\)/s);
   assert.match(html, /#app\{[^}]*min-height:0;overflow:hidden/s);
   assert.doesNotMatch(html, /id="menuButton"|id="languageMenuButton"|id="signin"/);
