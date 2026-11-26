@@ -17,7 +17,7 @@ test('phone header mounts through the shared helper without adding map clearance
 test('phone map-view menu opens upward from the bottom toolbar',()=>{
   assert.match(index,/\.view-menu\{position:absolute;top:auto;bottom:calc\(100% \+ 7px\);left:0;right:auto/);
   assert.match(index,/max-height:calc\(100dvh - 180px\);overflow:auto;overscroll-behavior:contain/);
-  assert.match(index,/<div class="zoom">\s*<button class="legend-toggle"[\s\S]*?<div class="view-control" id="viewControl">/);
+  assert.match(index,/<div class="zoom">\s*<div class="legend-control" id="legendControl">[\s\S]*?<button class="legend-toggle"[\s\S]*?<div class="view-control" id="viewControl">/);
 });
 
 test('adoption leaves the existing map header, dock controls and data path in place',()=>{

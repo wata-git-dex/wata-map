@@ -167,7 +167,7 @@ test('map controls and headline statistics use compact grouped callouts', () => 
   assert.doesNotMatch(html, /\.zoom button\{width:40px;height:40px/);
   assert.match(html, /\.zoom \.rst\{width:40px;padding:0\}/);
   assert.match(html, /<button id="rst" class="rst" aria-label="Reset view" title="Reset view"><svg/);
-  assert.match(html, /<div class="zoom">\s*<button class="legend-toggle"[\s\S]*?<div class="view-control" id="viewControl">[\s\S]*?<button class="theme-toggle" id="themeToggle"/);
+  assert.match(html, /<div class="zoom">\s*<div class="legend-control" id="legendControl">[\s\S]*?<button class="legend-toggle"[\s\S]*?<div class="view-control" id="viewControl">[\s\S]*?<button class="theme-toggle" id="themeToggle"/);
   const headerMarkup = html.match(/<div class="head">([\s\S]*?)<\/div>\s*<div id="wrap">/)?.[1] || '';
   assert.ok(headerMarkup.indexOf('id="impactToggle"') < headerMarkup.indexOf('class="impact"'));
   assert.doesNotMatch(headerMarkup, /viewControl|themeToggle|Zoom in/);
@@ -176,11 +176,11 @@ test('map controls and headline statistics use compact grouped callouts', () => 
 test('tablet chrome is solid while the map remains visible between compact controls', () => {
   assert.match(html, /--chrome:#0a202b/);
   assert.match(html, /\[data-theme="light"\][^{]*\{[^}]*--chrome:#ffffff/s);
-  assert.match(html, /\.title\{[^}]*background:var\(--chrome\)[^}]*box-shadow/s);
+  assert.match(html, /\.title\{[^}]*background:color-mix\(in srgb,var\(--chrome\) 88%,var\(--ocean\)\)[^}]*box-shadow/s);
   assert.match(html, /\.impact\{[^}]*background:var\(--chrome\)/s);
   assert.match(html, /\.view-trigger\{[^}]*background:var\(--chrome\)/s);
   assert.doesNotMatch(html, /\.head\{[^}]*background:/s);
-  assert.match(html, /\.legend\{[^}]*width:min\(170px[^}]*background:var\(--chrome\)/s);
+  assert.match(html, /\.legend\{[^}]*width:170px[^}]*background:var\(--chrome\)/s);
   assert.match(html, /\[data-map-view="stress"\] \.legend[^}]*width:min\(220px/s);
   assert.match(html, />WHO dashboard<\/a>/);
   assert.match(html, /missing = no report/);
@@ -212,7 +212,8 @@ test('standalone map chrome respects iPhone safe areas without double-insetting 
   assert.match(html, /window\.self!==window\.top/);
   assert.match(html, /\[data-embedded="true"\]\{--safe-top:0px;--safe-right:0px;--safe-bottom:0px;--safe-left:0px\}/);
   assert.match(html, /\.head\{[^}]*var\(--safe-top\)[^}]*var\(--safe-right\)[^}]*var\(--safe-left\)/s);
-  assert.match(html, /\.legend\{[^}]*var\(--safe-bottom\)[^}]*var\(--safe-left\)[^}]*var\(--safe-right\)/s);
+  assert.match(html, /\.legend-control\{[^}]*position:relative[^}]*display:flex/s);
+  assert.match(html, /\.legend\{[^}]*left:0[^}]*bottom:calc\(100% \+ 10px\)[^}]*transform:none/s);
   assert.match(html, /\.zoom\{[^}]*var\(--safe-bottom\)/s);
   assert.match(html, /\.zoom\{[^}]*var\(--safe-left\)[^}]*var\(--safe-right\)/s);
   assert.match(html, /\.card \.body\{[^}]*var\(--safe-top\)[^}]*var\(--safe-bottom\)/s);

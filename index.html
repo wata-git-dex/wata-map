@@ -29,10 +29,10 @@
     transition:background .2s ease,color .2s ease}
   .head{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;flex-direction:column;align-items:center;gap:7px;
     padding:calc(12px + var(--safe-top)) calc(18px + var(--safe-right)) 12px calc(18px + var(--safe-left));pointer-events:none}
-  .title{display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.05;pointer-events:auto;width:max-content;padding:7px 13px 6px;border:1px solid var(--line);border-radius:12px;background:var(--chrome);color:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.16);cursor:pointer}
+  .title{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.05;pointer-events:auto;width:max-content;min-width:178px;padding:8px 14px 9px;border:1px solid color-mix(in srgb,#59c2d6 58%,var(--line));border-radius:15px;background:color-mix(in srgb,var(--chrome) 88%,var(--ocean));color:var(--ink);box-shadow:0 10px 28px rgba(0,0,0,.14);cursor:pointer}
   .title:hover,.title:focus-visible{border-color:#59c2d6;outline:none}
   .title .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:600}
-  .title-main{display:flex;align-items:center;justify-content:center;gap:5px}
+  .title-main{display:flex;align-items:center;justify-content:center;gap:8px}
   .title .map-title{margin:2px 0 0;font:400 clamp(21px,2.7vw,29px)/1 'Bangers',cursive;letter-spacing:.7px}
   .view-control{position:relative;width:max-content;pointer-events:auto}
   .view-trigger{min-height:44px;display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:13px;
@@ -51,7 +51,8 @@
   .view-swatch.gap-view{background:linear-gradient(135deg,#2DBE9E 0 20%,#6bc7bb 20% 40%,#edc84f 40% 60%,#ef8b43 60% 80%,#d54b4b 80%)}
   .view-swatch.cholera-view{background:linear-gradient(135deg,#f4a81d 0 20%,#f2682a 20% 40%,#ef3842 40% 60%,#bb2932 60% 80%,#8c171e 80%)}
   .view-option span:last-child{display:flex;flex-direction:column;gap:3px}.view-option b{font-size:13px}.view-option small{font-size:10px;color:var(--dim)}
-  .impact-toggle .chev{width:13px;height:13px;margin-top:2px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .18s ease}
+  .impact-toggle .chev{width:18px;height:18px;margin-top:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);fill:none;stroke:currentColor;stroke-width:2.2;transition:transform .18s ease,background .18s ease}
+  .impact-toggle[aria-expanded="true"]{border-color:#2dbe9e}.impact-toggle[aria-expanded="true"] .chev{background:rgba(45,190,158,.18)}
   .impact-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
   .impact{pointer-events:auto;display:flex;align-items:stretch;gap:4px;padding:5px;background:var(--chrome);
     border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 24px rgba(0,0,0,.16)}
@@ -77,8 +78,10 @@
   .cc.hasproj,.cc.hasstress,.cc.hasgap,.cc.hascholera{cursor:pointer}
   [data-map-view="stress"] .cc.wata-country,[data-map-view="gap"] .cc.wata-country,[data-map-view="cholera"] .cc.wata-country{stroke:var(--wata-outline);stroke-width:1.55;filter:drop-shadow(0 0 3px rgba(50,224,193,.44))}
 
-  .legend{position:absolute;left:50%;bottom:calc(78px + var(--safe-bottom));transform:translateX(-50%);z-index:7;width:min(170px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)));background:var(--chrome);
-    border:1px solid var(--line);border-radius:12px;padding:9px 10px;transition:background .2s ease,border-color .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  .legend-control{position:relative;display:flex;flex:0 0 auto}
+  .legend{position:absolute;left:0;bottom:calc(100% + 10px);transform:none;z-index:7;width:170px;background:var(--chrome);
+    border:1px solid var(--line);border-radius:13px;padding:10px 11px;transition:background .2s ease,border-color .2s ease;box-shadow:0 12px 30px rgba(0,0,0,.2)}
+  .legend::after{content:"";position:absolute;left:15px;bottom:-6px;width:10px;height:10px;background:var(--chrome);border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
   .legend[hidden]{display:none}
   [data-map-view="stress"] .legend,[data-map-view="gap"] .legend,[data-map-view="cholera"] .legend{width:min(220px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)))}
   .legend h3{margin:0 0 5px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim);font-weight:600}
@@ -166,11 +169,11 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   @media (max-width:640px){
-    .legend{left:50%;bottom:calc(70px + var(--safe-bottom));width:min(160px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)));padding:8px 9px}
+    .legend{left:0;bottom:calc(100% + 9px);width:min(170px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)));padding:9px 10px}
     [data-map-view="stress"] .legend,[data-map-view="gap"] .legend,[data-map-view="cholera"] .legend{width:min(205px,calc(100vw - 24px - var(--safe-left) - var(--safe-right)))}
     .zoom{bottom:calc(12px + var(--safe-bottom));max-width:calc(100vw - 24px - var(--safe-left) - var(--safe-right))}
     .head{gap:6px;padding:calc(10px + var(--safe-top)) calc(12px + var(--safe-right)) 10px calc(12px + var(--safe-left))}
-    .title{padding:6px 10px}.title .eyebrow{font-size:9px}.title .map-title{font-size:20px}
+    .title{min-width:172px;padding:7px 12px 8px}.title .eyebrow{font-size:9px}.title .map-title{font-size:21px}
     .impact{width:min(100%,330px);justify-content:center}
     .kpi{flex:1;min-width:0;padding:8px 9px;text-align:center}
     .kpi b{font-size:20px}
@@ -384,21 +387,22 @@
     </svg>
   </div>
 
-  <div class="legend" id="legend" hidden>
-    <h3 id="legendTitle">Stage</h3><div id="legendRows"></div>
-    <div class="updated" id="impactUpdated">
-      <button class="refresh" id="refreshBtn" title="Pull latest from Notion" aria-label="Refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-      </button>
-      <span>Last updated <b id="updated">—</b></span>
-    </div>
-    <div class="source-note" id="stressSource" hidden><a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">WRI Aqueduct 4.0</a><br>Baseline screening data · historical through 2019 · not real-time</div>
-    <div class="source-note" id="gapSource" hidden><a href="https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS" target="_blank" rel="noopener noreferrer">WHO/UNICEF JMP via World Bank</a><br>Share without safely managed drinking water · national estimate · missing data stays neutral</div>
-    <div class="source-note" id="choleraSource" hidden><a href="https://who-global-cholera-and-awd-dashboard-1-who.hub.arcgis.com/" target="_blank" rel="noopener noreferrer" aria-label="WHO Global Cholera and Acute Watery Diarrhea Dashboard">WHO dashboard</a><br><span id="choleraSourceStatus">Loads when selected · monthly · missing = no report</span></div>
-  </div>
-
   <div class="zoom">
-    <button class="legend-toggle" id="legendToggle" type="button" aria-expanded="false" aria-controls="legend" aria-label="Show map legend" title="Map legend"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="5" cy="12" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M10 6h9M10 12h9M10 18h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    <div class="legend-control" id="legendControl">
+      <button class="legend-toggle" id="legendToggle" type="button" aria-expanded="false" aria-controls="legend" aria-label="Show map legend" title="Map legend"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="5" cy="12" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M10 6h9M10 12h9M10 18h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      <div class="legend" id="legend" hidden>
+        <h3 id="legendTitle">Stage</h3><div id="legendRows"></div>
+        <div class="updated" id="impactUpdated">
+          <button class="refresh" id="refreshBtn" title="Pull latest from Notion" aria-label="Refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
+          <span>Last updated <b id="updated">—</b></span>
+        </div>
+        <div class="source-note" id="stressSource" hidden><a href="https://datasets.wri.org/datasets/aqueduct-40-current-and-future-country-rankings" target="_blank" rel="noopener noreferrer">WRI Aqueduct 4.0</a><br>Baseline screening data · historical through 2019 · not real-time</div>
+        <div class="source-note" id="gapSource" hidden><a href="https://data.worldbank.org/indicator/SH.H2O.SMDW.ZS" target="_blank" rel="noopener noreferrer">WHO/UNICEF JMP via World Bank</a><br>Share without safely managed drinking water · national estimate · missing data stays neutral</div>
+        <div class="source-note" id="choleraSource" hidden><a href="https://who-global-cholera-and-awd-dashboard-1-who.hub.arcgis.com/" target="_blank" rel="noopener noreferrer" aria-label="WHO Global Cholera and Acute Watery Diarrhea Dashboard">WHO dashboard</a><br><span id="choleraSourceStatus">Loads when selected · monthly · missing = no report</span></div>
+      </div>
+    </div>
     <div class="view-control" id="viewControl">
       <button class="view-trigger" id="viewTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="viewMenu">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5M4 16.5l8 4.5 8-4.5"/></svg>
